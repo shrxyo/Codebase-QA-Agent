@@ -8,7 +8,8 @@ backend/.env.*
 __pycache__/
 *.py[cod]
 .venv/
-*.egg-info/
+venv/
+env/
 
 # Node
 node_modules/
