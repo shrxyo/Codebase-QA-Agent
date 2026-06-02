@@ -1,0 +1,22 @@
+
+# Environment files
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+
+# OS
+.DS_Store
+
+# Cursor / AI agent rules
+.cursorrules
+docs/CLAUDE.md
