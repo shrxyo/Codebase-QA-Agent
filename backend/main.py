@@ -1,10 +1,14 @@
 import os
+import subprocess
 
 import chromadb
 from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+from indexer import RepoIndexer
 
 load_dotenv()
 
@@ -21,6 +25,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# repo_url -> {"indexer": RepoIndexer, "stats": dict}
+_indexed_repos: dict[str, dict] = {}
+
+
+class IndexRequest(BaseModel):
+    repo_url: str
 
 
 @app.get("/health")
@@ -45,3 +56,55 @@ async def health():
         "rag_pipeline": "operational",
         "retrieved_chunks": retrieved,
     }
+
+
+@app.post("/index")
+async def index_repo(body: IndexRequest):
+    repo_url = body.repo_url.strip()
+
+    # Clean up any previously indexed version of the same repo
+    if repo_url in _indexed_repos:
+        _indexed_repos[repo_url]["indexer"].cleanup()
+        del _indexed_repos[repo_url]
+
+    indexer = RepoIndexer()
+    try:
+        stats = indexer.index_repo(repo_url)
+    except subprocess.CalledProcessError:
+        indexer.cleanup()
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to clone repository. Check that the URL is correct and the repo is public: {repo_url}",
+        )
+    except subprocess.TimeoutExpired:
+        indexer.cleanup()
+        raise HTTPException(
+            status_code=400,
+            detail="Clone timed out after 60 seconds. The repository may be too large or unreachable.",
+        )
+    except Exception as exc:
+        indexer.cleanup()
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    _indexed_repos[repo_url] = {"indexer": indexer, "stats": stats}
+
+    return {
+        "status": "indexed",
+        "repo_url": repo_url,
+        "files_indexed": stats["files"],
+        "chunks_created": stats["chunks"],
+        "languages": stats["languages"],
+    }
+
+
+@app.get("/repos")
+async def list_repos():
+    return [
+        {
+            "repo_url": url,
+            "files_indexed": entry["stats"]["files"],
+            "chunks_created": entry["stats"]["chunks"],
+            "languages": entry["stats"]["languages"],
+        }
+        for url, entry in _indexed_repos.items()
+    ]
