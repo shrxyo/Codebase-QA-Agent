@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 import agent
+import summarizer
 from indexer import RepoIndexer
 
 load_dotenv()
@@ -94,7 +95,8 @@ async def index_repo(body: IndexRequest):
         indexer.cleanup()
         raise HTTPException(status_code=400, detail=str(exc))
 
-    _indexed_repos[repo_url] = {"indexer": indexer, "stats": stats}
+    summary = summarizer.generate_repo_summary(indexer, indexer.repo_dir, repo_url)
+    _indexed_repos[repo_url] = {"indexer": indexer, "stats": stats, "summary": summary}
 
     return {
         "status": "indexed",
@@ -102,6 +104,7 @@ async def index_repo(body: IndexRequest):
         "files_indexed": stats["files"],
         "chunks_created": stats["chunks"],
         "languages": stats["languages"],
+        "summary": summary,
     }
 
 
