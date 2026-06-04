@@ -12,6 +12,7 @@ venv/
 backend/venv/
 env/
 
+
 # Node
 node_modules/
 dist/
@@ -22,3 +23,5 @@ dist/
 # Cursor / AI agent rules
 .cursorrules
 docs/CLAUDE.md
+frontend/.env
+frontend/package-lock.json
