@@ -6,8 +6,10 @@ from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+import agent
 from indexer import RepoIndexer
 
 load_dotenv()
@@ -32,6 +34,12 @@ _indexed_repos: dict[str, dict] = {}
 
 class IndexRequest(BaseModel):
     repo_url: str
+
+
+class ChatRequest(BaseModel):
+    repo_url: str
+    question: str
+    history: list[dict] = []
 
 
 @app.get("/health")
@@ -95,6 +103,25 @@ async def index_repo(body: IndexRequest):
         "chunks_created": stats["chunks"],
         "languages": stats["languages"],
     }
+
+
+@app.post("/chat")
+async def chat(body: ChatRequest):
+    repo_url = body.repo_url.strip()
+
+    if repo_url not in _indexed_repos:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Repository not indexed. POST /index first: {repo_url}",
+        )
+
+    indexer = _indexed_repos[repo_url]["indexer"]
+
+    return StreamingResponse(
+        agent.stream_answer(indexer, body.question, body.history),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @app.get("/repos")
