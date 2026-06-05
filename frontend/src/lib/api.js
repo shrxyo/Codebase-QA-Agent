@@ -15,6 +15,12 @@ export async function indexRepo(repoUrl) {
   return res.json()
 }
 
+export async function checkHealth() {
+  const res = await fetch(`${BASE_URL}/health`)
+  if (!res.ok) throw new Error(`Server error ${res.status}`)
+  return res.json()
+}
+
 export async function listRepos() {
   const res = await fetch(`${BASE_URL}/repos`)
   if (!res.ok) throw new Error(`Server error ${res.status}`)

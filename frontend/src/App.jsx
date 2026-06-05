@@ -39,7 +39,7 @@ export default function App() {
       )
     }
 
-    return <ChatPanel repo={indexedRepo} summary={repoSummary} initialQuestion={initialQuestion} />
+    return <ChatPanel repo={indexedRepo} summary={repoSummary} stats={indexStats} initialQuestion={initialQuestion} />
   }
 
   return (
