@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: codebase-qa-agent
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: LLM_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false
+      - key: RERANKER_ENABLED
+        # Free tier has 512MB RAM; keep reranker off unless you upgrade
+        value: "false"
+      - key: DEBUG_MODE
+        value: "false"
+      - key: ANALYTICS_API_KEY
+        sync: false
