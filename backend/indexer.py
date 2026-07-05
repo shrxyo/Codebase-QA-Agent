@@ -25,7 +25,14 @@ CHUNK_OVERLAP = 10
 MIN_CHUNK_CHARS = 20
 UPSERT_BATCH_SIZE = 100
 
-_embed_fn = embedding_functions.DefaultEmbeddingFunction()
+_embed_fn = None
+
+
+def _get_embed_fn():
+    global _embed_fn
+    if _embed_fn is None:
+        _embed_fn = embedding_functions.DefaultEmbeddingFunction()
+    return _embed_fn
 
 
 class RepoIndexer:
@@ -122,7 +129,7 @@ class RepoIndexer:
         collection_name = f"repo_{uuid.uuid4().hex}"
         self._collection = client.create_collection(
             name=collection_name,
-            embedding_function=_embed_fn,
+            embedding_function=_get_embed_fn(),
         )
 
         for batch_start in range(0, len(chunks), UPSERT_BATCH_SIZE):

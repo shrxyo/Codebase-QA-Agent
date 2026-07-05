@@ -1,8 +1,6 @@
 import os
 import subprocess
 
-import chromadb
-from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -45,26 +43,7 @@ class ChatRequest(BaseModel):
 
 @app.get("/health")
 async def health():
-    client = chromadb.Client()
-    embed_fn = embedding_functions.DefaultEmbeddingFunction()
-    col = client.create_collection(name="health_check", embedding_function=embed_fn)
-
-    col.upsert(
-        ids=["test_chunk"],
-        documents=["def hello(): return 'world'"],
-        metadatas=[{"file": "test.py", "lines": "1-1", "language": "py"}],
-    )
-
-    results = col.query(query_texts=["hello function"], n_results=1)
-    retrieved = len(results["documents"][0])
-
-    client.delete_collection("health_check")
-
-    return {
-        "status": "ok",
-        "rag_pipeline": "operational",
-        "retrieved_chunks": retrieved,
-    }
+    return {"status": "ok"}
 
 
 @app.post("/index")
