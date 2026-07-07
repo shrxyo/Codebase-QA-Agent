@@ -68,7 +68,7 @@ async def index_repo(body: IndexRequest):
         indexer.cleanup()
         raise HTTPException(
             status_code=400,
-            detail="Clone timed out after 60 seconds. The repository may be too large or unreachable.",
+            detail="Clone timed out after 5 minutes. The repository may be too large or unreachable.",
         )
     except Exception as exc:
         indexer.cleanup()

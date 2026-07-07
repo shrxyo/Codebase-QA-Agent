@@ -1,8 +1,11 @@
 import os
+import re
 import shutil
 import subprocess
 import tempfile
 import uuid
+import urllib.request
+import json
 
 import chromadb
 from chromadb.utils import embedding_functions
@@ -25,7 +28,34 @@ CHUNK_OVERLAP = 10
 MIN_CHUNK_CHARS = 20
 UPSERT_BATCH_SIZE = 100
 
+MAX_REPO_SIZE_MB = 200
+CLONE_TIMEOUT_SECONDS = 300
+
 _embed_fn = None
+
+
+def _check_github_repo_size(url: str) -> None:
+    """Raises ValueError if the GitHub repo exceeds MAX_REPO_SIZE_MB."""
+    match = re.search(r"github\.com[/:]([^/]+)/([^/\.]+?)(?:\.git)?$", url)
+    if not match:
+        return  # Not a GitHub URL — skip check, let clone proceed
+
+    owner, repo = match.group(1), match.group(2)
+    api_url = f"https://api.github.com/repos/{owner}/{repo}"
+    try:
+        req = urllib.request.Request(api_url, headers={"User-Agent": "RepoSage/1.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+    except Exception:
+        return  # Network or API error — don't block the clone
+
+    size_kb = data.get("size", 0)
+    size_mb = size_kb / 1024
+    if size_mb > MAX_REPO_SIZE_MB:
+        raise ValueError(
+            f"Repository is {size_mb:.0f} MB, which exceeds the {MAX_REPO_SIZE_MB} MB limit. "
+            "Try a smaller repository."
+        )
 
 
 def _get_embed_fn():
@@ -43,13 +73,15 @@ class RepoIndexer:
         self._collection = None
 
     def index_repo(self, url: str) -> dict:
+        _check_github_repo_size(url)
+
         self._temp_dir = tempfile.mkdtemp()
         self.repo_dir = os.path.join(self._temp_dir, "repo")
 
         subprocess.run(
             ["git", "clone", "--depth=1", url, self.repo_dir],
             check=True,
-            timeout=60,
+            timeout=CLONE_TIMEOUT_SECONDS,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
