@@ -54,6 +54,8 @@ def _ms_since(start: float) -> int:
 
 class IndexRequest(BaseModel):
     repo_url: str
+    # Rebuild even if this repo is already indexed (e.g. to pick up new commits).
+    force: bool = False
 
 
 class ChatRequest(BaseModel):
@@ -74,7 +76,13 @@ async def health():
 def index_repo(body: IndexRequest):
     repo_url = body.repo_url.strip()
 
-    # Clean up any previously indexed version of the same repo
+    # Already indexed: return it instead of re-embedding. Indexing a medium
+    # repo takes ~10 min on Render's free CPU, so this is what makes a
+    # pre-indexed demo repo open instantly from the UI.
+    if repo_url in _indexed_repos and not body.force:
+        return _index_response(repo_url, _indexed_repos[repo_url], cached=True)
+
+    # Rebuilding: clean up the previously indexed version first
     if repo_url in _indexed_repos:
         _indexed_repos.pop(repo_url)["indexer"].delete()
 
@@ -126,21 +134,29 @@ def index_repo(body: IndexRequest):
 
     # The cloned files aren't needed for chat; everything is in ChromaDB now.
     indexer.remove_clone()
-    _indexed_repos[repo_url] = {"indexer": indexer, "stats": stats, "summary": summary}
+    entry = {"indexer": indexer, "stats": stats, "summary": summary, "timings_ms": timings}
+    _indexed_repos[repo_url] = entry
 
     logger.info(
         "Indexed %s (%d files, %d chunks) timings_ms=%s",
         repo_url, stats["files"], stats["chunks"], timings,
     )
 
+    return _index_response(repo_url, entry, cached=False)
+
+
+def _index_response(repo_url: str, entry: dict, cached: bool) -> dict:
+    """/index response. timings_ms describes the build that created the index
+    (None for repos restored from disk, whose build timings weren't saved)."""
     return {
         "status": "indexed",
+        "cached": cached,
         "repo_url": repo_url,
-        "files_indexed": stats["files"],
-        "chunks_created": stats["chunks"],
-        "languages": stats["languages"],
-        "summary": summary,
-        "timings_ms": timings,
+        "files_indexed": entry["stats"]["files"],
+        "chunks_created": entry["stats"]["chunks"],
+        "languages": entry["stats"]["languages"],
+        "summary": entry["summary"],
+        "timings_ms": entry.get("timings_ms"),
     }
 
 
