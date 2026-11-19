@@ -145,6 +145,7 @@ class RepoIndexer:
         self.chunks: list[dict] = []
         self._temp_dir: str | None = None
         self._collection = None
+        self._files: frozenset[str] | None = None
 
     def clone_and_chunk(self) -> dict:
         self.clone()
@@ -192,6 +193,7 @@ class RepoIndexer:
                 chunks.extend(self._chunk_lines(lines, rel_path, language))
 
         self.chunks = chunks
+        self._files = frozenset(c["file"] for c in chunks)
 
         return {
             "files": self._count_unique_files(chunks),
@@ -265,6 +267,19 @@ class RepoIndexer:
             })
         return hits
 
+    def indexed_files(self) -> frozenset[str]:
+        """Relative paths of every file that has at least one chunk.
+
+        Set by chunk() for a fresh index. For a repo restored from disk it is
+        read once from the chunk metadata (one scan) and cached.
+        """
+        if self._files is None:
+            if self._collection is None:
+                return frozenset()
+            metas = self._collection.get(include=["metadatas"])["metadatas"]
+            self._files = frozenset(m["file"] for m in metas)
+        return self._files
+
     def remove_clone(self) -> None:
         """Delete the cloned files. Everything needed for chat is in ChromaDB."""
         if self._temp_dir and os.path.exists(self._temp_dir):
@@ -281,6 +296,7 @@ class RepoIndexer:
         except Exception:
             pass
         self._collection = None
+        self._files = None
 
     # ------------------------------------------------------------------
     # Internal helpers

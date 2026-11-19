@@ -13,6 +13,7 @@ export default function MessageBubble({ msg }) {
   }
 
   const hasError = Boolean(msg.error)
+  const citeMap = buildCiteMap(msg.confidence?.citations)
 
   return (
     <div className="fade-up" style={s.assistantRow}>
@@ -50,9 +51,12 @@ export default function MessageBubble({ msg }) {
 
         {/* Answer content */}
         <div style={hasError ? s.answerError : s.answerContent}>
-          {msg.content ? parseMarkdown(msg.content) : null}
+          {msg.content ? parseMarkdown(msg.content, citeMap) : null}
           {msg.streaming && <span style={s.cursor}>▋</span>}
         </div>
+
+        {/* Citation check (server-side: file indexed + lines retrieved) */}
+        {msg.confidence && !msg.streaming && <CitationCheck confidence={msg.confidence} />}
 
         {/* Latency line */}
         {msg.timings && !msg.streaming && (
@@ -81,9 +85,60 @@ function formatMs(ms) {
   return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`
 }
 
+/* ─── Citations ──────────────────────────────────────────────────────────────── */
+
+// The server does all parsing and checking (agent.verify_citations). The UI
+// only looks up each bracket's exact text, so there is one definition of
+// "valid". A bracket with several ranges is valid only if all of them are.
+function buildCiteMap(citations) {
+  const map = new Map()
+  for (const c of citations ?? []) {
+    const prev = map.get(c.raw)
+    map.set(c.raw, {
+      valid: (prev ? prev.valid : true) && c.valid,
+      why: [prev?.why, c.why].filter(Boolean).join('; '),
+    })
+  }
+  return map
+}
+
+function CitationCheck({ confidence }) {
+  const { score, reason, citations = [] } = confidence
+  const valid = citations.filter((c) => c.valid).length
+  const color = citations.length === 0 ? 'var(--color-text-dim)'
+    : score === 1 ? 'var(--color-success)'
+    : score >= 0.5 ? 'var(--color-warning)'
+    : 'var(--color-error)'
+
+  return (
+    <div style={s.citeCheck}>
+      <div style={s.citeHeader}>
+        <span style={{ ...s.citeScore, color, borderColor: color }}>
+          {citations.length === 0 ? 'no citations' : `${valid}/${citations.length} verified · ${Math.round(score * 100)}%`}
+        </span>
+        <span style={s.citeReason}>{reason}</span>
+      </div>
+      {citations.length > 0 && (
+        <div style={s.sourceChips}>
+          {citations.map((c, i) => (
+            <span
+              key={i}
+              style={{ ...s.sourceChip, ...(c.valid ? s.chipValid : s.chipInvalid) }}
+              title={c.valid ? `Verified against ${c.resolved}` : c.why}
+            >
+              {c.valid ? '✓' : '⚠'} {c.file}:{c.lines}
+              {!c.valid && <span style={s.chipWhy}> · {c.why}</span>}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ─── Markdown renderer ──────────────────────────────────────────────────────── */
 
-function parseMarkdown(text) {
+function parseMarkdown(text, citeMap) {
   const nodes = []
   const codeBlockRe = /```(\w*)\n?([\s\S]*?)```/g
   let lastIndex = 0
@@ -92,7 +147,7 @@ function parseMarkdown(text) {
 
   while ((match = codeBlockRe.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      nodes.push(...parseTextBlock(text.slice(lastIndex, match.index), key))
+      nodes.push(...parseTextBlock(text.slice(lastIndex, match.index), key, citeMap))
       key += 500
     }
     const lang = match[1].trim() || 'text'
@@ -108,36 +163,36 @@ function parseMarkdown(text) {
   }
 
   if (lastIndex < text.length) {
-    nodes.push(...parseTextBlock(text.slice(lastIndex), key))
+    nodes.push(...parseTextBlock(text.slice(lastIndex), key, citeMap))
   }
 
   return nodes
 }
 
-function parseTextBlock(text, baseKey) {
+function parseTextBlock(text, baseKey, citeMap) {
   const nodes = []
   let key = baseKey
 
   for (const line of text.split('\n')) {
     if (line.startsWith('### ')) {
-      nodes.push(<h3 key={key++} style={s.h3}>{parseInline(line.slice(4))}</h3>)
+      nodes.push(<h3 key={key++} style={s.h3}>{parseInline(line.slice(4), citeMap)}</h3>)
     } else if (line.startsWith('## ')) {
-      nodes.push(<h2 key={key++} style={s.h2}>{parseInline(line.slice(3))}</h2>)
+      nodes.push(<h2 key={key++} style={s.h2}>{parseInline(line.slice(3), citeMap)}</h2>)
     } else if (line.startsWith('# ')) {
-      nodes.push(<h1 key={key++} style={s.h1}>{parseInline(line.slice(2))}</h1>)
+      nodes.push(<h1 key={key++} style={s.h1}>{parseInline(line.slice(2), citeMap)}</h1>)
     } else if (line.trim() === '') {
       nodes.push(<div key={key++} style={s.lineSpacer} />)
     } else {
-      nodes.push(<p key={key++} style={s.para}>{parseInline(line)}</p>)
+      nodes.push(<p key={key++} style={s.para}>{parseInline(line, citeMap)}</p>)
     }
   }
 
   return nodes
 }
 
-function parseInline(text) {
+function parseInline(text, citeMap) {
   const parts = []
-  const re = /(\*\*([\s\S]+?)\*\*|`([^`]+)`)/g
+  const re = /(\*\*([\s\S]+?)\*\*|`([^`]+)`|\[[^\[\]\n]+\])/g
   let last = 0
   let match
   let key = 0
@@ -148,6 +203,18 @@ function parseInline(text) {
     }
     if (match[2] !== undefined) {
       parts.push(<strong key={key++} style={s.bold}>{match[2]}</strong>)
+    } else if (match[3] === undefined) {
+      // [bracket]: mark it only if the server checked it as a citation.
+      const cite = citeMap?.get(match[0])
+      parts.push(cite ? (
+        <span
+          key={key++}
+          style={{ ...s.inlineCite, ...(cite.valid ? s.chipValid : s.chipInvalid) }}
+          title={cite.valid ? 'Verified: these lines were retrieved for this answer' : `Not verified: ${cite.why}`}
+        >
+          {cite.valid ? '✓' : '⚠'} {match[0].slice(1, -1)}
+        </span>
+      ) : match[0])
     } else {
       parts.push(<code key={key++} style={s.inlineCode}>{match[3]}</code>)
     }
@@ -278,6 +345,58 @@ const s = {
     color: 'var(--color-error)',
     lineHeight: 1.65,
     wordBreak: 'break-word',
+  },
+
+  // Citation check
+  citeCheck: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.375rem',
+    borderLeft: '2px solid var(--color-border)',
+    paddingLeft: '0.75rem',
+  },
+  citeHeader: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
+    gap: '0.5rem',
+  },
+  citeScore: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.625rem',
+    fontWeight: 600,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    border: '1px solid',
+    borderRadius: 'var(--radius-sm)',
+    padding: '0.0625rem 0.375rem',
+    whiteSpace: 'nowrap',
+  },
+  citeReason: {
+    fontFamily: 'var(--font-sans)',
+    fontSize: '0.75rem',
+    color: 'var(--color-text-muted)',
+    lineHeight: 1.5,
+  },
+  chipValid: {
+    color: 'var(--color-success)',
+    borderColor: 'color-mix(in srgb, var(--color-success) 40%, transparent)',
+  },
+  chipInvalid: {
+    color: 'var(--color-warning)',
+    borderColor: 'color-mix(in srgb, var(--color-warning) 40%, transparent)',
+  },
+  chipWhy: {
+    color: 'var(--color-text-muted)',
+  },
+  inlineCite: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.8125em',
+    background: 'var(--color-surface-2)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-sm)',
+    padding: '0.0625em 0.375em',
+    whiteSpace: 'nowrap',
   },
 
   // Latency line

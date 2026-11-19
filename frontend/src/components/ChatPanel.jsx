@@ -70,12 +70,12 @@ export default function ChatPanel({ repo, summary, stats, initialQuestion }) {
           }
           return updated
         })
-      } else if (event.type === 'timings') {
+      } else if (event.type === 'timings' || event.type === 'confidence') {
         setMessages((prev) => {
           const updated = [...prev]
           const last = updated[updated.length - 1]
           if (last?.role === 'assistant') {
-            updated[updated.length - 1] = { ...last, timings: event }
+            updated[updated.length - 1] = { ...last, [event.type]: event }
           }
           return updated
         })
