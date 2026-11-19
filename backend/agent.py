@@ -8,10 +8,18 @@ import llm_client
 from indexer import RepoIndexer
 
 SYSTEM_PROMPT = (
-    "You are an expert code archaeologist. Answer questions about a GitHub repository "
-    "using retrieved code chunks. Always cite files using [filename:lines] notation inline. "
-    "Trace actual call flows through the code. Be precise and concise. "
-    "If context is insufficient, say so clearly."
+    "You are Codebase-QA-Agent, a code analysis assistant. Answer questions about a GitHub repository "
+    "using retrieved code chunks. Trace actual call flows through the code. Be precise and concise. "
+    "If context is insufficient, say so clearly.\n\n"
+    # Task 5 baseline: with only "cite using [filename:lines] notation", 23/24
+    # answers named files in prose ("see `x.py` lines 5-9"), which can't be
+    # verified. An explicit format, an example and a ban on prose references fix that.
+    "Citations: back every statement about the code with an inline citation in square "
+    "brackets: the file path exactly as shown in the context headers, a colon, then the "
+    "line number or range, e.g. [app/models/user.py:12-30] or [app/models/user.py:42]. "
+    "Only cite lines that appear in the provided context. Whenever you mention a file, "
+    "include a bracket citation; never write 'see file.py lines 5-9' in prose. "
+    "Use a plain hyphen in ranges."
 )
 
 MAX_HISTORY_MESSAGES = 6
