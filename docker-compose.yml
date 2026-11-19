@@ -14,5 +14,18 @@ services:
       - ./backend:/app
       - chroma_data:/data/chroma
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Baked into the JS bundle and called from the browser on the host,
+        # so it's the host-published backend port, not http://backend:8000.
+        VITE_API_URL: http://localhost:8000
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
 volumes:
   chroma_data:
