@@ -12,6 +12,7 @@ import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 
+from chunkers.router import chunk_file
 from retrieval.bm25_index import BM25Index
 from retrieval.fusion import reciprocal_rank_fusion
 
@@ -30,10 +31,13 @@ SKIP_DIRS = {
     "dist", "build", ".next", "venv",
 }
 
-CHUNK_SIZE = 60
-CHUNK_OVERLAP = 10
-MIN_CHUNK_CHARS = 20
 UPSERT_BATCH_SIZE = 100
+
+# True = cut .py files at def/class boundaries (chunkers/python_chunker.py).
+# Off: on the golden set (task 7) it raised hybrid Recall@1 0.35 -> 0.51 but
+# lowered Recall@3, left Recall@8 (what the LLM reads) unchanged within noise,
+# and made indexing psf/requests 53% slower (335 -> 556 chunks to embed).
+FUNCTION_AWARE_CHUNKS = False
 
 MAX_REPO_SIZE_MB = 200
 CLONE_TIMEOUT_SECONDS = 300
@@ -161,8 +165,9 @@ class RepoIndexer:
         clone() -> chunk() -> build_index() -> save_metadata() -> remove_clone()
     """
 
-    def __init__(self, repo_url: str):
+    def __init__(self, repo_url: str, function_aware: bool = FUNCTION_AWARE_CHUNKS):
         self.repo_url = repo_url
+        self.function_aware = function_aware
         self.repo_dir: str | None = None
         self.chunks: list[dict] = []
         self._temp_dir: str | None = None
@@ -190,7 +195,7 @@ class RepoIndexer:
         )
 
     def chunk(self) -> dict:
-        """Walk the clone and split supported files into line-based chunks."""
+        """Walk the clone and split supported files into chunks (see chunkers/)."""
         chunks: list[dict] = []
         languages_seen: set[str] = set()
 
@@ -213,7 +218,7 @@ class RepoIndexer:
 
                 language = ext.lstrip(".")
                 languages_seen.add(language)
-                chunks.extend(self._chunk_lines(lines, rel_path, language))
+                chunks.extend(chunk_file(lines, rel_path, language, self.function_aware))
 
         self.chunks = chunks
         self._files = frozenset(c["file"] for c in chunks)
@@ -397,31 +402,6 @@ class RepoIndexer:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
-
-    def _chunk_lines(self, lines: list[str], file: str, language: str) -> list[dict]:
-        chunks = []
-        total = len(lines)
-        step = CHUNK_SIZE - CHUNK_OVERLAP
-        start = 0
-
-        while start < total:
-            end = min(start + CHUNK_SIZE, total)
-            content = "".join(lines[start:end])
-
-            if len(content.strip()) >= MIN_CHUNK_CHARS:
-                chunks.append({
-                    "content": content,
-                    "file": file,
-                    "lines": f"{start + 1}-{end}",
-                    "language": language,
-                    "node_type": "chunk",
-                })
-
-            if end == total:
-                break
-            start += step
-
-        return chunks
 
     def _count_unique_files(self, chunks: list[dict]) -> int:
         return len({c["file"] for c in chunks})

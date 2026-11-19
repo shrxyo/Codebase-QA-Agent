@@ -56,23 +56,32 @@ RETRIEVERS: dict[str, Retriever] = {
 }
 
 
-def eval_repo_url(repo: str) -> str:
-    """Key the index on url@commit so a new pin never reuses a stale index."""
-    return f"{REPOS[repo]['url']}@{REPOS[repo]['commit']}"
+CHUNKERS = ("lines", "ast")
 
 
-def get_indexer(repo: str, source: str | None = None, reindex: bool = False) -> tuple[RepoIndexer, dict]:
+def eval_repo_url(repo: str, chunker: str = "lines") -> str:
+    """Key the index on url@commit so a new pin never reuses a stale index.
+
+    Function-aware chunks get their own index ("#ast"), so both variants can
+    be compared without rebuilding. "lines" keeps the original key.
+    """
+    url = f"{REPOS[repo]['url']}@{REPOS[repo]['commit']}"
+    return url if chunker == "lines" else f"{url}#{chunker}"
+
+
+def get_indexer(repo: str, source: str | None = None, reindex: bool = False,
+                chunker: str = "lines") -> tuple[RepoIndexer, dict]:
     """Return an indexer for the pinned commit, building the index if needed.
 
     Returns (indexer, stats). stats includes "embed_ms" only when it was built.
     """
-    url = eval_repo_url(repo)
+    url = eval_repo_url(repo, chunker)
     if not reindex:
         for r in indexer_module.load_persisted_repos():
             if r["repo_url"] == url:
                 return r["indexer"], r["stats"]
 
-    idx = RepoIndexer(url)
+    idx = RepoIndexer(url, function_aware=(chunker == "ast"))
     with tempfile.TemporaryDirectory() as tmp:
         idx.repo_dir = checkout(repo, os.path.join(tmp, repo), source)
         stats = idx.chunk()
@@ -129,6 +138,8 @@ def main() -> None:
     parser.add_argument("--method", choices=sorted(RETRIEVERS), default="embedding")
     parser.add_argument("--repo", choices=sorted(REPOS), action="append",
                         help="limit to one repo (repeatable); default: all")
+    parser.add_argument("--chunker", choices=CHUNKERS, default="lines",
+                        help="lines = 60-line windows; ast = function-aware Python chunks")
     parser.add_argument("--reindex", action="store_true", help="rebuild the eval index")
     parser.add_argument("--source", action="append", default=[], metavar="REPO=URL_OR_PATH",
                         help="fetch a repo from somewhere else, e.g. an unpushed local clone")
@@ -140,7 +151,7 @@ def main() -> None:
 
     rows, index_stats = [], {}
     for repo in repos:
-        idx, stats = get_indexer(repo, sources.get(repo), args.reindex)
+        idx, stats = get_indexer(repo, sources.get(repo), args.reindex, args.chunker)
         index_stats[repo] = stats
         for q in (q for q in QUESTIONS if q.repo == repo):
             t = time.perf_counter()
@@ -155,7 +166,7 @@ def main() -> None:
     for kind in dict.fromkeys(r["kind"] for r in rows):
         groups[f"kind: {kind}"] = aggregate([r for r in rows if r["kind"] == kind])
 
-    print(f"\n## Retrieval eval: method={args.method}\n")
+    print(f"\n## Retrieval eval: method={args.method} chunker={args.chunker}\n")
     print(markdown_table(groups))
     lat = sorted(r["retrieval_ms"] for r in rows)
     print(f"\nRetrieval latency (in-process, n={len(lat)}): "
@@ -168,10 +179,12 @@ def main() -> None:
 
     os.makedirs(RESULTS_DIR, exist_ok=True)
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    path = os.path.join(RESULTS_DIR, f"retrieval_{args.method}_{ts}.json")
+    tag = args.method if args.chunker == "lines" else f"{args.method}-{args.chunker}"
+    path = os.path.join(RESULTS_DIR, f"retrieval_{tag}_{ts}.json")
     with open(path, "w") as f:
         json.dump({
             "method": args.method,
+            "chunker": args.chunker,
             "timestamp": ts,
             "repos": {r: REPOS[r] for r in repos},
             "index_stats": index_stats,
