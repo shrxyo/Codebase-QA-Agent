@@ -31,7 +31,13 @@ SKIP_DIRS = {
     "dist", "build", ".next", "venv",
 }
 
-UPSERT_BATCH_SIZE = 100
+# ChromaDB embeds each upsert batch in one ONNX call (up to 32 docs, all padded
+# to 256 tokens), so this sets peak RAM: attention scores alone are
+# batch x 12 heads x 256^2 x 4 B per layer, and ONNX Runtime's arena keeps
+# what it allocates. Measured under a 512 MB limit (Render free tier) indexing
+# psf/requests: 100 -> 721 MiB peak (OOM-killed), 16 -> 482 MiB, 8 -> 369 MiB.
+# Cost: embedding ~35% slower (44 s -> 60 s for requests).
+UPSERT_BATCH_SIZE = 8
 
 # True = cut .py files at def/class boundaries (chunkers/python_chunker.py).
 # Off: on the golden set (task 7) it raised hybrid Recall@1 0.35 -> 0.51 but
