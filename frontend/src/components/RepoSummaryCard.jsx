@@ -4,6 +4,18 @@ const COMPLEXITY_BADGE = {
   complex:  { label: 'complex',  bg: 'rgba(249, 115, 22, 0.12)',  border: 'rgba(249, 115, 22, 0.3)', color: '#f97316' },
 }
 
+// Summary runs in parallel with embed, so the stages don't add up to the total.
+const INDEX_STAGES = [
+  ['clone', 'clone'],
+  ['chunk', 'chunk'],
+  ['embed', 'embed'],
+  ['summary', 'summary ∥'],
+]
+
+function formatMs(ms) {
+  return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`
+}
+
 export default function RepoSummaryCard({ summary, stats, onContinue }) {
   const complexity = summary?.complexity && COMPLEXITY_BADGE[summary.complexity]
     ? summary.complexity
@@ -60,6 +72,16 @@ export default function RepoSummaryCard({ summary, stats, onContinue }) {
                   <span style={s.statLabel}>{languages.slice(0, 4).join(', ')}</span>
                 </>
               )}
+            </div>
+          )}
+
+          {/* Index timings */}
+          {stats?.timings && (
+            <div style={s.timingsRow}>
+              indexed in {formatMs(stats.timings.total)}
+              {INDEX_STAGES.filter(([key]) => stats.timings[key] != null).map(([key, label]) => (
+                <span key={key}> · {label} {formatMs(stats.timings[key])}</span>
+              ))}
             </div>
           )}
         </div>
@@ -214,6 +236,12 @@ const s = {
     color: 'var(--color-text-muted)',
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
+  },
+  timingsRow: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.6875rem',
+    color: 'var(--color-text-dim)',
+    marginTop: '0.25rem',
   },
   statDot: {
     color: 'var(--color-text-dim)',

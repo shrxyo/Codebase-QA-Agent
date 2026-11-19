@@ -54,6 +54,15 @@ export default function MessageBubble({ msg }) {
           {msg.streaming && <span style={s.cursor}>▋</span>}
         </div>
 
+        {/* Latency line */}
+        {msg.timings && !msg.streaming && (
+          <div style={s.timingsRow}>
+            retrieval {formatMs(msg.timings.retrieval_ms)}
+            {msg.timings.ttft_ms != null && <> · first token {formatMs(msg.timings.ttft_ms)}</>}
+            {' '}· total {formatMs(msg.timings.total_ms)}
+          </div>
+        )}
+
         {/* Error indicator */}
         {hasError && (
           <div style={s.errorRow}>
@@ -65,6 +74,11 @@ export default function MessageBubble({ msg }) {
       </div>
     </div>
   )
+}
+
+function formatMs(ms) {
+  if (ms == null) return '—'
+  return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`
 }
 
 /* ─── Markdown renderer ──────────────────────────────────────────────────────── */
@@ -264,6 +278,14 @@ const s = {
     color: 'var(--color-error)',
     lineHeight: 1.65,
     wordBreak: 'break-word',
+  },
+
+  // Latency line
+  timingsRow: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.6875rem',
+    color: 'var(--color-text-dim)',
+    lineHeight: 1.5,
   },
 
   // Error row

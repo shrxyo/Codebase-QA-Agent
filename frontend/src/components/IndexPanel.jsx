@@ -87,6 +87,7 @@ export default function IndexPanel({ onSuccess }) {
           files: data.files_indexed,
           chunks: data.chunks_created,
           languages: data.languages,
+          timings: data.timings_ms ?? null,
         },
         summary: data.summary,
       })

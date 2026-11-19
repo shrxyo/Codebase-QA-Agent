@@ -1,5 +1,6 @@
 import logging
 import subprocess
+import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 
@@ -47,6 +48,10 @@ app.add_middleware(
 )
 
 
+def _ms_since(start: float) -> int:
+    return round((time.perf_counter() - start) * 1000)
+
+
 class IndexRequest(BaseModel):
     repo_url: str
 
@@ -74,19 +79,35 @@ def index_repo(body: IndexRequest):
         _indexed_repos.pop(repo_url)["indexer"].delete()
 
     indexer = RepoIndexer(repo_url)
+    timings: dict[str, int] = {}
+    t_start = time.perf_counter()
     try:
-        stats = indexer.clone_and_chunk()
+        t = time.perf_counter()
+        indexer.clone()
+        timings["clone"] = _ms_since(t)
+
+        t = time.perf_counter()
+        stats = indexer.chunk()
+        timings["chunk"] = _ms_since(t)
 
         # The summary only needs the README, file listing and entry points,
-        # not the embeddings, so run the LLM call while we embed.
+        # not the embeddings, so run the LLM call while we embed. It's timed
+        # inside the worker thread because it overlaps with "embed".
+        def timed_summary():
+            t0 = time.perf_counter()
+            result = summarizer.generate_repo_summary(indexer, indexer.repo_dir, repo_url)
+            timings["summary"] = _ms_since(t0)
+            return result
+
         with ThreadPoolExecutor(max_workers=1) as pool:
-            summary_future = pool.submit(
-                summarizer.generate_repo_summary, indexer, indexer.repo_dir, repo_url
-            )
+            summary_future = pool.submit(timed_summary)
+            t = time.perf_counter()
             indexer.build_index()
+            timings["embed"] = _ms_since(t)
             summary = summary_future.result()
 
         indexer.save_metadata(stats, summary)
+        timings["total"] = _ms_since(t_start)
     except subprocess.CalledProcessError:
         indexer.delete()
         raise HTTPException(
@@ -107,6 +128,11 @@ def index_repo(body: IndexRequest):
     indexer.remove_clone()
     _indexed_repos[repo_url] = {"indexer": indexer, "stats": stats, "summary": summary}
 
+    logger.info(
+        "Indexed %s (%d files, %d chunks) timings_ms=%s",
+        repo_url, stats["files"], stats["chunks"], timings,
+    )
+
     return {
         "status": "indexed",
         "repo_url": repo_url,
@@ -114,6 +140,7 @@ def index_repo(body: IndexRequest):
         "chunks_created": stats["chunks"],
         "languages": stats["languages"],
         "summary": summary,
+        "timings_ms": timings,
     }
 
 

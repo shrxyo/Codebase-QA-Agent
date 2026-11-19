@@ -134,9 +134,9 @@ def load_persisted_repos() -> list[dict]:
 class RepoIndexer:
     """Indexes one repository into its own ChromaDB collection.
 
-    Indexing is split into steps so main.py can run the summary LLM call in
-    parallel with embedding:
-        clone_and_chunk() -> build_index() -> save_metadata() -> remove_clone()
+    Indexing is split into steps so main.py can time each one and run the
+    summary LLM call in parallel with embedding:
+        clone() -> chunk() -> build_index() -> save_metadata() -> remove_clone()
     """
 
     def __init__(self, repo_url: str):
@@ -147,6 +147,11 @@ class RepoIndexer:
         self._collection = None
 
     def clone_and_chunk(self) -> dict:
+        self.clone()
+        return self.chunk()
+
+    def clone(self) -> None:
+        """Shallow-clone the repo into a temp dir (after a size check)."""
         _check_github_repo_size(self.repo_url)
 
         self._temp_dir = tempfile.mkdtemp()
@@ -160,6 +165,8 @@ class RepoIndexer:
             stderr=subprocess.DEVNULL,
         )
 
+    def chunk(self) -> dict:
+        """Walk the clone and split supported files into line-based chunks."""
         chunks: list[dict] = []
         languages_seen: set[str] = set()
 

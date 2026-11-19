@@ -1,4 +1,6 @@
 import json
+import logging
+import time
 from typing import Generator
 
 import llm_client
@@ -14,13 +16,25 @@ SYSTEM_PROMPT = (
 MAX_HISTORY_MESSAGES = 6
 MAX_TOKENS = 1500
 
+logger = logging.getLogger(__name__)
+
+
+def _ms_since(start: float) -> int:
+    return round((time.perf_counter() - start) * 1000)
+
 
 def stream_answer(
     indexer: RepoIndexer,
     question: str,
     history: list[dict],
 ) -> Generator[str, None, None]:
+    # All timings are measured from when the server starts producing this
+    # response, so TTFT is what the user waits before the first word appears
+    # (retrieval + prompt building + model latency, including any reasoning
+    # the model does before it emits visible text).
+    t_start = time.perf_counter()
     chunks = indexer.query(question, n_results=8)
+    retrieval_ms = _ms_since(t_start)
 
     sources = [{"file": c["file"], "lines": c["lines"]} for c in chunks]
     yield f"data: {json.dumps({'type': 'sources', 'sources': sources})}\n\n"
@@ -50,9 +64,17 @@ def stream_answer(
         **llm_client.get_request_options(),
     )
 
+    ttft_ms = None
     for chunk in stream:
+        if not chunk.choices:
+            continue
         delta = chunk.choices[0].delta
         if delta.content:
+            if ttft_ms is None:
+                ttft_ms = _ms_since(t_start)
             yield f"data: {json.dumps({'type': 'text', 'content': delta.content})}\n\n"
 
+    timings = {"retrieval_ms": retrieval_ms, "ttft_ms": ttft_ms, "total_ms": _ms_since(t_start)}
+    logger.info("Chat timings %s", timings)
+    yield f"data: {json.dumps({'type': 'timings', **timings})}\n\n"
     yield "data: [DONE]\n\n"
