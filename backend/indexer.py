@@ -31,6 +31,14 @@ SKIP_DIRS = {
     "dist", "build", ".next", "venv",
 }
 
+# Generated files that are expensive to embed and rarely answer a question.
+# Every chunk costs the same to embed (the model pads/truncates to 256 tokens),
+# so indexing time is proportional to chunk count. Lockfiles are skipped by
+# name; .json is kept only when small (configs like package.json or tsconfig),
+# since big .json files are data dumps (fixtures, eval results, i18n tables).
+SKIP_FILES = {"package-lock.json", "pnpm-lock.yaml", "composer.lock"}
+MAX_JSON_BYTES = 10_000
+
 # ChromaDB embeds each upsert batch in one ONNX call (up to 32 docs, all padded
 # to 256 tokens), so this sets peak RAM: attention scores alone are
 # batch x 12 heads x 256^2 x 4 B per layer, and ONNX Runtime's arena keeps
@@ -85,6 +93,16 @@ def _check_github_repo_size(url: str) -> None:
             f"Repository is {size_mb:.0f} MB, which exceeds the {MAX_REPO_SIZE_MB} MB limit. "
             "Try a smaller repository."
         )
+
+
+def should_index(filename: str, size_bytes: int) -> bool:
+    """Whether a file (by name and size) is worth chunking and embedding."""
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in SUPPORTED_EXTENSIONS or filename in SKIP_FILES:
+        return False
+    if ext == ".json" and size_bytes > MAX_JSON_BYTES:
+        return False
+    return True
 
 
 def _get_embed_fn():
@@ -209,11 +227,15 @@ class RepoIndexer:
             dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
 
             for filename in files:
-                ext = os.path.splitext(filename)[1].lower()
-                if ext not in SUPPORTED_EXTENSIONS:
+                abs_path = os.path.join(root, filename)
+                try:
+                    size = os.path.getsize(abs_path)
+                except OSError:
+                    continue
+                if not should_index(filename, size):
                     continue
 
-                abs_path = os.path.join(root, filename)
+                ext = os.path.splitext(filename)[1].lower()
                 rel_path = os.path.relpath(abs_path, self.repo_dir)
 
                 try:

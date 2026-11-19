@@ -1,0 +1,788 @@
+{
+  "method": "hybrid",
+  "chunker": "lines",
+  "timestamp": "20261119T175752Z",
+  "repos": {
+    "requests": {
+      "url": "https://github.com/psf/requests",
+      "commit": "3c7baaa05ab4aa49cc819ce3a819d260de19c157"
+    },
+    "codebase-qa-agent": {
+      "url": "https://github.com/shrxyo/Codebase-QA-Agent",
+      "commit": "918a8540eb440a6a9826554a734f1493c2c7545d"
+    }
+  },
+  "index_stats": {
+    "requests": {
+      "files": 64,
+      "chunks": 292,
+      "languages": [
+        "md",
+        "py",
+        "toml",
+        "txt",
+        "yaml",
+        "yml"
+      ],
+      "embed_ms": 43228
+    },
+    "codebase-qa-agent": {
+      "files": 19,
+      "chunks": 60,
+      "languages": [
+        "js",
+        "json",
+        "jsx",
+        "py",
+        "txt",
+        "yaml",
+        "yml"
+      ],
+      "embed_ms": 10836
+    }
+  },
+  "k_values": [
+    1,
+    3,
+    5,
+    8
+  ],
+  "metrics": {
+    "all": {
+      "n": 24,
+      "recall@1": 0.47222222222222227,
+      "recall@3": 0.7430555555555555,
+      "recall@5": 0.8888888888888888,
+      "recall@8": 0.9652777777777778,
+      "mrr": 0.7226190476190476
+    },
+    "repo: requests": {
+      "n": 12,
+      "recall@1": 0.5694444444444444,
+      "recall@3": 0.6527777777777778,
+      "recall@5": 0.9027777777777778,
+      "recall@8": 0.9305555555555555,
+      "mrr": 0.7666666666666666
+    },
+    "repo: codebase-qa-agent": {
+      "n": 12,
+      "recall@1": 0.375,
+      "recall@3": 0.8333333333333334,
+      "recall@5": 0.875,
+      "recall@8": 1.0,
+      "mrr": 0.6785714285714285
+    },
+    "kind: definition": {
+      "n": 6,
+      "recall@1": 0.5,
+      "recall@3": 0.8333333333333334,
+      "recall@5": 0.8333333333333334,
+      "recall@8": 1.0,
+      "mrr": 0.6904761904761906
+    },
+    "kind: flow": {
+      "n": 6,
+      "recall@1": 0.3055555555555555,
+      "recall@3": 0.638888888888889,
+      "recall@5": 0.8055555555555555,
+      "recall@8": 0.9444444444444445,
+      "mrr": 0.7000000000000001
+    },
+    "kind: config": {
+      "n": 6,
+      "recall@1": 0.4166666666666667,
+      "recall@3": 0.6666666666666666,
+      "recall@5": 0.9166666666666666,
+      "recall@8": 0.9166666666666666,
+      "mrr": 0.7083333333333334
+    },
+    "kind: identifier": {
+      "n": 6,
+      "recall@1": 0.6666666666666666,
+      "recall@3": 0.8333333333333334,
+      "recall@5": 1.0,
+      "recall@8": 1.0,
+      "mrr": 0.7916666666666666
+    }
+  },
+  "questions": [
+    {
+      "id": "req-def-1",
+      "repo": "requests",
+      "kind": "definition",
+      "question": "Where is the case-insensitive dictionary that stores HTTP headers implemented?",
+      "expected_files": [
+        "src/requests/structures.py"
+      ],
+      "retrieved_files": [
+        "src/requests/structures.py",
+        "HISTORY.md",
+        "HISTORY.md",
+        "tests/test_structures.py",
+        "HISTORY.md",
+        "src/requests/adapters.py",
+        "tests/test_requests.py",
+        "src/requests/utils.py"
+      ],
+      "first_relevant_rank": 1,
+      "rr": 1.0,
+      "recall": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 1107.5
+    },
+    {
+      "id": "req-def-2",
+      "repo": "requests",
+      "kind": "definition",
+      "question": "Where are the exception classes for connect and read timeouts defined?",
+      "expected_files": [
+        "src/requests/exceptions.py"
+      ],
+      "retrieved_files": [
+        "src/requests/exceptions.py",
+        "src/requests/adapters.py",
+        "tests/test_requests.py",
+        "src/requests/__init__.py",
+        "src/requests/adapters.py",
+        "src/requests/adapters.py",
+        "tests/test_testserver.py",
+        "tests/test_requests.py"
+      ],
+      "first_relevant_rank": 1,
+      "rr": 1.0,
+      "recall": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 94.7
+    },
+    {
+      "id": "req-def-3",
+      "repo": "requests",
+      "kind": "definition",
+      "question": "Where are the human-readable names for HTTP status codes, like codes.ok or codes.not_found, defined?",
+      "expected_files": [
+        "src/requests/status_codes.py"
+      ],
+      "retrieved_files": [
+        "src/requests/status_codes.py",
+        "src/requests/status_codes.py",
+        "src/requests/models.py",
+        "HISTORY.md",
+        "HISTORY.md",
+        "HISTORY.md",
+        "src/requests/models.py",
+        "src/requests/models.py"
+      ],
+      "first_relevant_rank": 1,
+      "rr": 1.0,
+      "recall": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 91.8
+    },
+    {
+      "id": "req-flow-1",
+      "repo": "requests",
+      "kind": "flow",
+      "question": "How does a call to requests.get() end up being sent over the network by the transport adapter?",
+      "expected_files": [
+        "src/requests/api.py",
+        "src/requests/sessions.py",
+        "src/requests/adapters.py"
+      ],
+      "retrieved_files": [
+        "src/requests/adapters.py",
+        "src/requests/adapters.py",
+        "src/requests/models.py",
+        "tests/test_requests.py",
+        "tests/test_requests.py",
+        "tests/test_adapters.py",
+        "src/requests/api.py",
+        "src/requests/models.py"
+      ],
+      "first_relevant_rank": 1,
+      "rr": 1.0,
+      "recall": {
+        "1": 0.3333333333333333,
+        "3": 0.3333333333333333,
+        "5": 0.3333333333333333,
+        "8": 0.6666666666666666
+      },
+      "retrieval_ms": 90.7
+    },
+    {
+      "id": "req-flow-2",
+      "repo": "requests",
+      "kind": "flow",
+      "question": "How are redirects followed, and when is the Authorization header dropped during a redirect?",
+      "expected_files": [
+        "src/requests/sessions.py"
+      ],
+      "retrieved_files": [
+        "HISTORY.md",
+        "src/requests/sessions.py",
+        "HISTORY.md",
+        "tests/test_requests.py",
+        "tests/test_lowlevel.py",
+        "tests/test_requests.py",
+        "src/requests/sessions.py",
+        "tests/test_lowlevel.py"
+      ],
+      "first_relevant_rank": 2,
+      "rr": 0.5,
+      "recall": {
+        "1": 0.0,
+        "3": 1.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 88.4
+    },
+    {
+      "id": "req-flow-3",
+      "repo": "requests",
+      "kind": "flow",
+      "question": "How does HTTP Digest authentication retry the request after the server responds with a 401 challenge?",
+      "expected_files": [
+        "src/requests/auth.py"
+      ],
+      "retrieved_files": [
+        "tests/test_lowlevel.py",
+        "tests/test_lowlevel.py",
+        "tests/test_requests.py",
+        "HISTORY.md",
+        "src/requests/auth.py",
+        "tests/test_requests.py",
+        "tests/test_lowlevel.py",
+        "HISTORY.md"
+      ],
+      "first_relevant_rank": 5,
+      "rr": 0.2,
+      "recall": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 90.3
+    },
+    {
+      "id": "req-cfg-1",
+      "repo": "requests",
+      "kind": "config",
+      "question": "What is the default maximum number of redirects a session will follow, and where is it set?",
+      "expected_files": [
+        "src/requests/models.py",
+        "src/requests/sessions.py"
+      ],
+      "retrieved_files": [
+        "src/requests/sessions.py",
+        "tests/test_requests.py",
+        "src/requests/sessions.py",
+        "HISTORY.md",
+        "HISTORY.md",
+        "src/requests/sessions.py",
+        "tests/test_requests.py",
+        "src/requests/sessions.py"
+      ],
+      "first_relevant_rank": 1,
+      "rr": 1.0,
+      "recall": {
+        "1": 0.5,
+        "3": 0.5,
+        "5": 0.5,
+        "8": 0.5
+      },
+      "retrieval_ms": 89.2
+    },
+    {
+      "id": "req-cfg-2",
+      "repo": "requests",
+      "kind": "config",
+      "question": "Which environment variables control the CA certificate bundle used for TLS verification?",
+      "expected_files": [
+        "src/requests/sessions.py"
+      ],
+      "retrieved_files": [
+        "src/requests/certs.py",
+        "src/requests/adapters.py",
+        "src/requests/adapters.py",
+        "src/requests/sessions.py",
+        "src/requests/sessions.py",
+        "tests/test_requests.py",
+        "tests/test_requests.py",
+        "tests/certs/mtls/README.md"
+      ],
+      "first_relevant_rank": 4,
+      "rr": 0.25,
+      "recall": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 92.8
+    },
+    {
+      "id": "req-cfg-3",
+      "repo": "requests",
+      "kind": "config",
+      "question": "What are the default connection pool size and retry count for the HTTP adapter?",
+      "expected_files": [
+        "src/requests/adapters.py"
+      ],
+      "retrieved_files": [
+        "src/requests/adapters.py",
+        "src/requests/adapters.py",
+        "src/requests/adapters.py",
+        "HISTORY.md",
+        "src/requests/adapters.py",
+        "src/requests/adapters.py",
+        "src/requests/adapters.py",
+        "src/requests/exceptions.py"
+      ],
+      "first_relevant_rank": 1,
+      "rr": 1.0,
+      "recall": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 88.9
+    },
+    {
+      "id": "req-id-1",
+      "repo": "requests",
+      "kind": "identifier",
+      "question": "What does should_strip_auth check?",
+      "expected_files": [
+        "src/requests/sessions.py"
+      ],
+      "retrieved_files": [
+        "tests/test_requests.py",
+        "src/requests/auth.py",
+        "tests/test_requests.py",
+        "src/requests/sessions.py",
+        "src/requests/sessions.py",
+        "src/requests/utils.py",
+        "tests/test_utils.py",
+        "tests/test_lowlevel.py"
+      ],
+      "first_relevant_rank": 4,
+      "rr": 0.25,
+      "recall": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 87.6
+    },
+    {
+      "id": "req-id-2",
+      "repo": "requests",
+      "kind": "identifier",
+      "question": "What is ITER_CHUNK_SIZE and which method uses it?",
+      "expected_files": [
+        "src/requests/models.py"
+      ],
+      "retrieved_files": [
+        "src/requests/models.py",
+        "src/requests/models.py",
+        "tests/test_requests.py",
+        "src/requests/utils.py",
+        "src/requests/models.py",
+        "src/requests/utils.py",
+        "HISTORY.md",
+        "tests/test_requests.py"
+      ],
+      "first_relevant_rank": 1,
+      "rr": 1.0,
+      "recall": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 88.7
+    },
+    {
+      "id": "req-id-3",
+      "repo": "requests",
+      "kind": "identifier",
+      "question": "What does dispatch_hook do?",
+      "expected_files": [
+        "src/requests/hooks.py"
+      ],
+      "retrieved_files": [
+        "src/requests/hooks.py",
+        "tests/test_hooks.py",
+        "tests/test_requests.py",
+        "src/requests/models.py",
+        "src/requests/_types.py",
+        "src/requests/models.py",
+        "src/requests/models.py",
+        "src/requests/models.py"
+      ],
+      "first_relevant_rank": 1,
+      "rr": 1.0,
+      "recall": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 94.9
+    },
+    {
+      "id": "cqa-def-1",
+      "repo": "codebase-qa-agent",
+      "kind": "definition",
+      "question": "Where is the HTTP endpoint that answers chat questions defined?",
+      "expected_files": [
+        "backend/main.py"
+      ],
+      "retrieved_files": [
+        "frontend/src/components/ChatPanel.jsx",
+        "backend/main.py",
+        "backend/main.py",
+        "backend/llm_client.py",
+        "frontend/src/components/ChatPanel.jsx",
+        "backend/agent.py",
+        "backend/summarizer.py",
+        "frontend/src/lib/api.js"
+      ],
+      "first_relevant_rank": 2,
+      "rr": 0.5,
+      "recall": {
+        "1": 0.0,
+        "3": 1.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 95.5
+    },
+    {
+      "id": "cqa-def-2",
+      "repo": "codebase-qa-agent",
+      "kind": "definition",
+      "question": "Which frontend component shows how long indexing took on the repo summary card?",
+      "expected_files": [
+        "frontend/src/components/RepoSummaryCard.jsx"
+      ],
+      "retrieved_files": [
+        "frontend/src/App.jsx",
+        "backend/indexer.py",
+        "frontend/src/components/IndexPanel.jsx",
+        "backend/main.py",
+        "frontend/src/components/IndexPanel.jsx",
+        "frontend/package.json",
+        "frontend/src/components/RepoSummaryCard.jsx",
+        "backend/main.py"
+      ],
+      "first_relevant_rank": 7,
+      "rr": 0.14285714285714285,
+      "recall": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 84.9
+    },
+    {
+      "id": "cqa-def-3",
+      "repo": "codebase-qa-agent",
+      "kind": "definition",
+      "question": "Where is the system prompt that tells the model to cite files defined?",
+      "expected_files": [
+        "backend/agent.py"
+      ],
+      "retrieved_files": [
+        "backend/summarizer.py",
+        "backend/agent.py",
+        "backend/summarizer.py",
+        "backend/llm_client.py",
+        "frontend/src/components/ChatPanel.jsx",
+        "backend/indexer.py",
+        "backend/main.py",
+        "backend/indexer.py"
+      ],
+      "first_relevant_rank": 2,
+      "rr": 0.5,
+      "recall": {
+        "1": 0.0,
+        "3": 1.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 87.8
+    },
+    {
+      "id": "cqa-flow-1",
+      "repo": "codebase-qa-agent",
+      "kind": "flow",
+      "question": "How does indexing run the repo summary at the same time as embedding?",
+      "expected_files": [
+        "backend/main.py"
+      ],
+      "retrieved_files": [
+        "backend/main.py",
+        "backend/indexer.py",
+        "backend/indexer.py",
+        "frontend/src/components/IndexPanel.jsx",
+        "frontend/src/App.jsx",
+        "backend/indexer.py",
+        "backend/main.py",
+        "backend/agent.py"
+      ],
+      "first_relevant_rank": 1,
+      "rr": 1.0,
+      "recall": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 85.7
+    },
+    {
+      "id": "cqa-flow-2",
+      "repo": "codebase-qa-agent",
+      "kind": "flow",
+      "question": "How is a chat answer streamed from the server to the browser, from retrieval to the final [DONE] event?",
+      "expected_files": [
+        "backend/agent.py",
+        "frontend/src/lib/api.js"
+      ],
+      "retrieved_files": [
+        "backend/main.py",
+        "backend/agent.py",
+        "backend/agent.py",
+        "frontend/src/components/ChatPanel.jsx",
+        "frontend/src/components/ChatPanel.jsx",
+        "frontend/src/components/MessageBubble.jsx",
+        "frontend/src/lib/api.js",
+        "frontend/src/components/ChatPanel.jsx"
+      ],
+      "first_relevant_rank": 2,
+      "rr": 0.5,
+      "recall": {
+        "1": 0.0,
+        "3": 0.5,
+        "5": 0.5,
+        "8": 1.0
+      },
+      "retrieval_ms": 83.8
+    },
+    {
+      "id": "cqa-flow-3",
+      "repo": "codebase-qa-agent",
+      "kind": "flow",
+      "question": "How does the server get back the repos it had already indexed after it restarts?",
+      "expected_files": [
+        "backend/indexer.py",
+        "backend/main.py"
+      ],
+      "retrieved_files": [
+        "backend/main.py",
+        "backend/main.py",
+        "backend/indexer.py",
+        "backend/main.py",
+        "backend/indexer.py",
+        "backend/indexer.py",
+        "frontend/src/App.jsx",
+        "backend/agent.py"
+      ],
+      "first_relevant_rank": 1,
+      "rr": 1.0,
+      "recall": {
+        "1": 0.5,
+        "3": 1.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 83.5
+    },
+    {
+      "id": "cqa-cfg-1",
+      "repo": "codebase-qa-agent",
+      "kind": "config",
+      "question": "Which environment variable chooses between the local and the hosted LLM provider?",
+      "expected_files": [
+        "backend/llm_client.py"
+      ],
+      "retrieved_files": [
+        "backend/llm_client.py",
+        "docker-compose.yml",
+        "render.yaml",
+        "backend/indexer.py",
+        "backend/summarizer.py",
+        "backend/main.py",
+        "backend/indexer.py",
+        "frontend/vite.config.js"
+      ],
+      "first_relevant_rank": 1,
+      "rr": 1.0,
+      "recall": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 83.8
+    },
+    {
+      "id": "cqa-cfg-2",
+      "repo": "codebase-qa-agent",
+      "kind": "config",
+      "question": "Where is the directory that ChromaDB saves the index to configured, both in code and in Docker?",
+      "expected_files": [
+        "backend/indexer.py",
+        "docker-compose.yml"
+      ],
+      "retrieved_files": [
+        "backend/main.py",
+        "backend/indexer.py",
+        "backend/indexer.py",
+        "docker-compose.yml",
+        "backend/indexer.py",
+        "render.yaml",
+        "backend/indexer.py",
+        "backend/indexer.py"
+      ],
+      "first_relevant_rank": 2,
+      "rr": 0.5,
+      "recall": {
+        "1": 0.0,
+        "3": 0.5,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 83.7
+    },
+    {
+      "id": "cqa-cfg-3",
+      "repo": "codebase-qa-agent",
+      "kind": "config",
+      "question": "How is the backend configured for deployment on Render, and is the reranker turned on there?",
+      "expected_files": [
+        "render.yaml"
+      ],
+      "retrieved_files": [
+        "docker-compose.yml",
+        "render.yaml",
+        "frontend/src/components/IndexPanel.jsx",
+        "frontend/src/App.jsx",
+        "frontend/src/main.jsx",
+        "backend/indexer.py",
+        "backend/indexer.py",
+        "frontend/src/components/ChatPanel.jsx"
+      ],
+      "first_relevant_rank": 2,
+      "rr": 0.5,
+      "recall": {
+        "1": 0.0,
+        "3": 1.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 88.2
+    },
+    {
+      "id": "cqa-id-1",
+      "repo": "codebase-qa-agent",
+      "kind": "identifier",
+      "question": "What does get_request_options return, and for which provider?",
+      "expected_files": [
+        "backend/llm_client.py"
+      ],
+      "retrieved_files": [
+        "backend/llm_client.py",
+        "backend/agent.py",
+        "backend/summarizer.py",
+        "backend/indexer.py",
+        "backend/main.py",
+        "backend/main.py",
+        "render.yaml",
+        "backend/indexer.py"
+      ],
+      "first_relevant_rank": 1,
+      "rr": 1.0,
+      "recall": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 87.9
+    },
+    {
+      "id": "cqa-id-2",
+      "repo": "codebase-qa-agent",
+      "kind": "identifier",
+      "question": "What thresholds does _complexity_label use?",
+      "expected_files": [
+        "backend/summarizer.py"
+      ],
+      "retrieved_files": [
+        "frontend/src/components/RepoSummaryCard.jsx",
+        "backend/summarizer.py",
+        "frontend/src/components/MessageBubble.jsx",
+        "frontend/src/components/MessageBubble.jsx",
+        "frontend/src/components/RepoSummaryCard.jsx",
+        "backend/summarizer.py",
+        "frontend/src/components/RepoSummaryCard.jsx",
+        "frontend/src/components/RepoSummaryCard.jsx"
+      ],
+      "first_relevant_rank": 2,
+      "rr": 0.5,
+      "recall": {
+        "1": 0.0,
+        "3": 1.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 87.7
+    },
+    {
+      "id": "cqa-id-3",
+      "repo": "codebase-qa-agent",
+      "kind": "identifier",
+      "question": "What is MAX_REPO_SIZE_MB and where is it enforced?",
+      "expected_files": [
+        "backend/indexer.py"
+      ],
+      "retrieved_files": [
+        "backend/indexer.py",
+        "render.yaml",
+        "backend/indexer.py",
+        "backend/main.py",
+        "backend/indexer.py",
+        "backend/summarizer.py",
+        "backend/indexer.py",
+        "backend/agent.py"
+      ],
+      "first_relevant_rank": 1,
+      "rr": 1.0,
+      "recall": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0,
+        "8": 1.0
+      },
+      "retrieval_ms": 88.1
+    }
+  ]
+}

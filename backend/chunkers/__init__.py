@@ -7,7 +7,10 @@ every language and the fallback for the Python AST chunker.
 from __future__ import annotations
 
 CHUNK_SIZE = 60
-CHUNK_OVERLAP = 10
+# 0 (was 10): every chunk costs the same to embed, so overlap was ~17% extra
+# embedding time. Hybrid Recall@8 was unchanged (0.97) and MRR 0.65 -> 0.72 on
+# the golden set (task 12); embedding-only reshuffled with no net trend.
+CHUNK_OVERLAP = 0
 MIN_CHUNK_CHARS = 20
 
 

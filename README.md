@@ -36,7 +36,7 @@ flowchart LR
 **`POST /index`** (a plain `def`, so FastAPI runs it in a worker thread and the server keeps answering other requests)
 
 1. `clone`: shallow clone into a temp dir, after a size check (limit 200 MB, 5-minute timeout).
-2. `chunk`: walk supported files and split them into line-window chunks (60 lines, 10 lines of overlap). Each chunk has `content`, `file`, `lines`, `language` and `node_type`.
+2. `chunk`: walk supported files and split them into line-window chunks (60 lines, no overlap). Lockfiles and `.json` files over 10 KB (data dumps, not configs) are skipped. Each chunk has `content`, `file`, `lines`, `language` and `node_type`.
 3. In parallel:
    - `embed`: upsert the chunks into a per-repo ChromaDB collection (all-MiniLM-L6-v2 via ONNX, batches of 8), then build the BM25 index.
    - `summary`: one LLM call using the README, file listing and entry points. It doesn't need embeddings, so it overlaps with the slowest step.
@@ -91,16 +91,18 @@ flowchart LR
 |---|---|---|---|---|---|
 | Embedding-only (baseline) | 0.33 | 0.68 | 0.78 | 0.90 | 0.56 |
 | Keyword (BM25) only | **0.56** | **0.83** | **0.89** | 0.95 | **0.79** |
-| Hybrid (RRF, k=60), the default for `/chat` | 0.35 | 0.78 | 0.87 | **0.97** | 0.65 |
+| Hybrid (RRF, k=60) | 0.35 | 0.78 | 0.87 | **0.97** | 0.65 |
 | Hybrid + Python function-aware chunks (not adopted) | 0.51 | 0.72 | 0.83 | 0.94–0.97 | 0.71–0.72 |
+| **Hybrid, no chunk overlap: the current default for `/chat`** | 0.47 | 0.74 | 0.89 | **0.97** | 0.72 |
 
-Setup: measured 2026-11-19 on the host with ChromaDB 0.5.23 and the same all-MiniLM-L6-v2 ONNX model as the container. The last row was measured in Docker, where retrieval isn't fully deterministic, so it is shown as a range over 3 runs.
+Setup: measured 2026-11-19 on the host with ChromaDB 0.5.23 and the same all-MiniLM-L6-v2 ONNX model as the container. The function-aware row was measured in Docker, where retrieval isn't fully deterministic, so it is shown as a range over 3 runs. The first four rows use 10 lines of chunk overlap.
 
 **What I learned from it:**
 - **The embedder misses most of each chunk.** all-MiniLM-L6-v2 reads at most 256 tokens. A 60-line chunk has a median of about 500–550 tokens, and 85–89% of chunks are over the limit, so the embeddings cover only about 46–51% of the indexed text. In every miss I checked, the answer sat below that cutoff.
 - **My hypothesis was wrong.** I expected identifier questions to be the weak spot for embeddings, the usual argument for hybrid search. They were the *strongest* kind (R@1 0.83, R@8 1.00). The weak kinds were *definition* (MRR 0.32) and *flow* (R@1 0.08), where the answer is a few lines inside a long chunk.
 - **Hybrid fixed the one total miss.** "Where are the exception classes for connect and read timeouts defined?" had no relevant chunk in the baseline's top 8. With hybrid, `exceptions.py` is in the top 8 (rank 8), and no question has nothing relevant in the top 8.
 - **Hybrid is not best at ranking.** BM25 alone beats it on MRR (0.79 vs 0.65). RRF rewards chunks that both retrievers rank moderately well, and test files and `HISTORY.md` match every query, so they collect two votes. I did not tune the weights, because that would be tuning on my own test set.
+- **Dropping chunk overlap cost no recall.** It was done for speed (13% fewer chunks on `psf/requests`), with the rule that it ships only if hybrid Recall@8 holds. It did (0.97 → 0.97), and MRR went 0.65 → 0.72. I read that as "no drop", not "an improvement": moving chunk boundaries changes which lines land in the embedder's 256-token window, and embedding-only results reshuffled with no net trend (2 questions gained, 2 lost, R@8 0.92 → 0.88). Rebuilding the same index can also move one near-tie question at R@8, so that is the noise floor.
 
 ### Answer quality (citations)
 
@@ -129,10 +131,25 @@ Baseline measured 2026-11-18 on local Docker (Docker Desktop on a Mac, 8 CPUs / 
 | Chat: total | p50 1.45 s / p95 2.10 s |
 
 **Why it looks like this:**
-- **Embedding is about 97% of indexing time** (about 130 ms per chunk), and it's the only stage that grows with repo size. The summary is fully hidden behind it. I have not sped it up yet (see next steps), so there's no "after" column for embedding.
+- **Embedding is about 97% of indexing time** (about 130 ms per chunk), and it's the only stage that grows with repo size. The summary is fully hidden behind it. See "Speeding up indexing" below for what changed.
 - **Chat latency is mostly the model**, not retrieval. In the 24-question answer run, TTFT minus retrieval ranged from 0.40 to 1.17 s, with a median TTFT of 879 ms (p95 2.06 s, driven by two slow retrievals).
 - **Hybrid adds nothing measurable.** In Docker, over 3 × 12 questions: vector top 8 p50 561 ms; BM25 top 24 p50 3.5 ms; hybrid top 8 p50 555 ms. Retrieval time is the time to embed the question. That was about 460 ms in the container that day, much slower than the 110 ms retrieval in the baseline. It was the same for all methods and I have not found the cause.
 - **I traded indexing speed for memory:** `UPSERT_BATCH_SIZE` 100 → 8 took indexing `psf/requests` from an OOM kill (peak 721 MiB) to a peak of about 353 MiB, and embed time from about 44 s to about 60 s.
+
+### Speeding up indexing
+
+**Diagnosis.** A profile showed that the time is all in the ONNX model; ChromaDB's own work is under 1 s per repo. I first planned to stop padding every chunk to 256 tokens, but measuring token lengths killed that idea: 89% of `psf/requests` chunks are *over* 256 tokens (median 556), so padding wastes only about 5% of the compute. Every chunk costs the same fixed 256 tokens, so **embedding time is proportional to the number of chunks**, and the only lever is embedding fewer of them.
+
+**Changes:** skip lockfiles and `.json` files over 10 KB, and set chunk overlap from 10 lines to 0.
+
+| Repo (commit) | Chunks before → after | Embed time, median of 3 `/index` runs: before → after |
+|---|---|---|
+| `psf/requests` (`3c7baaa`) | 335 → 292 (−13%) | 52.4 s → 34.8 s |
+| this repo (`636f497`) | 290 → 100 (−66%) | 51.8 s → 11.6 s |
+
+Measured 2026-11-19 through `docker compose` (same Docker Desktop VM as the baseline, `UPSERT_BATCH_SIZE = 8`), with "before" being the previous commit's code in the same container. In this repo, 183 of the 290 chunks were the eval harness's own JSON result files.
+
+**How to read it:** the chunk counts are exact. The times are noisy on a laptop: the "before" runs got slower each rep (44 → 52 → 62 s), so the measured drop overstates the real one. In the quietest interleaved run under a 512 MB limit, every configuration cost 126–140 ms per chunk, so the dependable estimate of the saving is the chunk reduction itself. Peak memory is unchanged (about 300–330 MiB under a 512 MB limit), because the batch size didn't change.
 
 ## Running locally
 
@@ -165,7 +182,7 @@ Deploy: backend on Render (Docker, free plan, `render.yaml`), frontend on Vercel
 
 - **Single-process, so not horizontally scalable.** The index lives in one process's memory plus local disk (Render's free tier has none, so repos vanish on redeploy). To scale out: run ChromaDB as its own server, move indexing onto a job queue (Celery + Redis), and keep `/chat` stateless.
 - **Memory:** each loaded repo adds roughly 10–25 MiB on top of the base, so only a handful of repos fit in 512 MB. Next step: evict the least recently used repos.
-- **Embedding is slow** (130 ms per chunk). Ideas, none tried yet: skip fixtures and lockfiles, drop chunk overlap, profile ONNX threads.
+- **Embedding is still about 130 ms per chunk**, and it now scales only with chunk count (data files and overlap are already cut). Next: a smaller or quantized embedding model, or chunks sized to fit the 256-token window (more chunks, but the embedder would see all of each one), each checked against the retrieval eval.
 - **Citation checking is mechanical.** It proves a citation points at retrieved code, not that the code supports the claim. The prompt-v2 fix is unmeasured.
 - **Retrieval:** test files and changelogs distract. Next steps: down-weight them at query time, and add a cross-encoder reranker (it doesn't fit in 512 MB, so it needs a bigger instance).
 - **Single-shot retrieval.** Each question retrieves once and answers once ("agent" in the name means a helper, not an autonomous loop). A possible next step is a ReAct loop that can search again, read a file or follow a call when the first retrieval isn't enough.
