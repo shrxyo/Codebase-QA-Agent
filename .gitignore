@@ -31,3 +31,6 @@ frontend/package-lock.json
 # Local ChromaDB data
 backend/chroma_data/
 chroma_data/
+
+# Eval index (rebuilt from pinned commits)
+backend/eval/.index/

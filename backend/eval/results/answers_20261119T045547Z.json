@@ -1,0 +1,1188 @@
+{
+  "timestamp": "20261119T045547Z",
+  "provider": "groq",
+  "model": "openai/gpt-oss-20b",
+  "sleep_s": 35.0,
+  "repos": {
+    "requests": {
+      "url": "https://github.com/psf/requests",
+      "commit": "3c7baaa05ab4aa49cc819ce3a819d260de19c157"
+    },
+    "codebase-qa-agent": {
+      "url": "https://github.com/shrxyo/Codebase-QA-Agent",
+      "commit": "918a8540eb440a6a9826554a734f1493c2c7545d"
+    }
+  },
+  "summary": {
+    "n": 24,
+    "errors": 0,
+    "retrieval_ms": {
+      "p50": 130.5,
+      "p95": 1348.0000000000016
+    },
+    "ttft_ms": {
+      "p50": 879.0,
+      "p95": 2062.550000000001
+    },
+    "total_ms": {
+      "p50": 1185.5,
+      "p95": 3192.9500000000016
+    },
+    "citation_validity": null,
+    "citations_checked": 0
+  },
+  "questions": [
+    {
+      "answer": "The case\u2011insensitive dictionary used to hold HTTP headers is implemented in **`src/requests/structures.py`**.  \nIt defines the `CaseInsensitiveDict` class, which is a `MutableMapping` that stores keys case\u2011insensitively but preserves the original key casing for iteration and display.  \n\n```py\n# src/requests/structures.py\nclass CaseInsensitiveDict(MutableMapping[str, _VT], Generic[_VT]):\n    ...\n```\n\nAll header containers in Requests (e.g., `Response.headers`, `PreparedRequest.headers`, etc.) are instances of this `CaseInsensitiveDict`.",
+      "sources": [
+        {
+          "file": "src/requests/utils.py",
+          "lines": "951-1010"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "251-310"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "751-810"
+        },
+        {
+          "file": "src/requests/utils.py",
+          "lines": "551-610"
+        },
+        {
+          "file": "src/requests/status_codes.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1951-2010"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "1751-1810"
+        },
+        {
+          "file": "src/requests/structures.py",
+          "lines": "1-60"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 132,
+        "ttft_ms": 1141,
+        "total_ms": 1250
+      },
+      "error": null,
+      "id": "req-def-1",
+      "repo": "requests",
+      "kind": "definition",
+      "question": "Where is the case-insensitive dictionary that stores HTTP headers implemented?",
+      "citations": null
+    },
+    {
+      "answer": "The timeout\u2011related exception classes are defined in **`src/requests/exceptions.py`**.  \n`ConnectTimeout` and `ReadTimeout` are imported in *adapters.py* from this module:\n\n```py\nfrom .exceptions import (\n    ConnectionError,\n    ConnectTimeout,\n    InvalidHeader,\n    ...\n    ReadTimeout,\n    ...\n)\n```\n\nHence the actual class definitions for those two exceptions are in *src/requests/exceptions.py*.",
+      "sources": [
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "701-748"
+        },
+        {
+          "file": "tests/testserver/server.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1301-1360"
+        },
+        {
+          "file": "tests/test_testserver.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "151-210"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1901-1960"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1851-1910"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 113,
+        "ttft_ms": 863,
+        "total_ms": 1012
+      },
+      "error": null,
+      "id": "req-def-2",
+      "repo": "requests",
+      "kind": "definition",
+      "question": "Where are the exception classes for connect and read timeouts defined?",
+      "citations": null
+    },
+    {
+      "answer": "The human\u2011readable names such as `codes.ok` or `codes.not_found` come from the mapping defined in **`src/requests/status_codes.py`**.  \nThe file declares a dictionary `_codes` that lists each numeric HTTP status code and a tuple of the names that should resolve to that code:\n\n```py\n# src/requests/status_codes.py\n_codes = {\n    200: (\"ok\", \"okay\", \"all_ok\", \"all_okay\", \"all_good\", \"\\\\o/\", \"\u2713\"),\n    404: (\"not_found\", \"-o-\"),\n    \u2026\n}\n```\n\n`_codes` is then wrapped in a `LookupDict` (imported from `requests.structures`) which creates both dictionary\u2011style access (e.g. `codes['ok']`) and attribute access (`codes.ok`). The `codes` object is exported at the module level, so when you do `import requests` you get `requests.codes.ok`, etc.",
+      "sources": [
+        {
+          "file": "src/requests/status_codes.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "751-810"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "1151-1184"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1851-1910"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "801-860"
+        },
+        {
+          "file": "src/requests/__init__.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "851-910"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "901-960"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 2461,
+        "ttft_ms": 3171,
+        "total_ms": 3377
+      },
+      "error": null,
+      "id": "req-def-3",
+      "repo": "requests",
+      "kind": "definition",
+      "question": "Where are the human-readable names for HTTP status codes, like codes.ok or codes.not_found, defined?",
+      "citations": null
+    },
+    {
+      "answer": "**Short answer**\n\nWhen you call `requests.get(url)`, the call ultimately reaches the `send()` method of the *transport adapter* (an instance of `HTTPAdapter`). That method hands the request to `urllib3` which actually opens the socket, writes the HTTP request line, headers and body, and reads the response from the server.\n\nBelow is the call\u2011flow broken down step\u2011by\u2011step with the relevant source locations.\n\n---\n\n### 1. The public entry point\n\n`requests.get` is a thin wrapper around the API helper:\n\n```py\n# src/requests/api.py  (lines 1\u201160)\ndef request(...):\n    ...\n```\n\n`requests.get` simply calls this helper with the method set to `\"GET\"`:\n\n```py\n# src/requests/api.py  (lines 70\u2011)\ndef get(url, **kwargs):\n    return request(\"GET\", url, **kwargs)\n```\n\n`requests.api.get` is imported into the top\u2011level package and exposed as `requests.get`.\n\n---\n\n### 2. `request()` \u2192 `Session.request()`\n\n`requests.api.request()` creates a `Request` object (via `Request()`) and then asks the default `Session` to send it:\n\n```py\n# src/requests/api.py  (lines 120\u2011)\ndef request(method, url, **kwargs):\n    session = sessions.Session()\n    return session.request(method, url, **kwargs)\n```\n\nSo the flow now is: **`Session.request`**.\n\n---\n\n### 3. `Session.request()` \u2192 `prepare_request()` \u2192 `send()`\n\nThe `Session` class is in `src/requests/sessions.py`.\n\n```py\n# src/requests/sessions.py  (lines 520\u2011590)\ndef request(self, method, url, **kwargs):\n    ...\n    req = Request(method=method, url=url, **kwargs)\n    prep = self.prepare_request(req)          # <\u2011\u2011 prepares headers, body, URL\n    send_kwargs = self.merge_environment_settings(...)\n    resp = self.send(prep, **send_kwargs)     # <\u2011\u2011 goes to transport adapter\n    return resp\n```\n\n`prepare_request()` builds a `PreparedRequest` with all headers, query strings, etc.  \n`send()` is the method that hands the request off to the adapter.\n\n---\n\n### 4. `Session.send()` \u2192 adapter\u2019s `send()`\n\nThe session keeps a dictionary of adapters, keyed by URL scheme (`'http'`, `'https'`, etc.):\n\n```py\n# src/requests/sessions.py  (lines 590\u2011620)\ndef send(self, request, **kwargs):\n    ...\n    adapter = self.get_adapter(request.url)\n    return adapter.send(request, **kwargs)\n```\n\nThe default adapter for HTTP/HTTPS is an instance of `HTTPAdapter`, created when a session is first used:\n\n```py\n# src/requests/sessions.py  (lines 650\u2011680)\nself.mount(\"http://\", HTTPAdapter())\nself.mount(\"https://\", HTTPAdapter())\n```\n\nThus the call finally reaches:\n\n```py\n# src/requests/adapters.py  (lines 600\u2011660)\ndef send(\n    self,\n    request: PreparedRequest,\n    stream: bool = False,\n    timeout: _t.TimeoutType = None,\n    verify: _t.VerifyType = True,\n    cert: _t.CertType = None,\n    proxies: dict[str, str] | None = None,\n) -> Response:\n    \"\"\"Sends PreparedRequest object. Returns Response object.\"\"\"\n    ...\n```\n\n---\n\n### 5. `HTTPAdapter.send()` \u2192 `urllib3.PoolManager`\n\nInside `HTTPAdapter.send()` (not shown in the snippets, but in the same file), the adapter:\n\n1. **Resolves proxies** (`select_proxy`)  \n2. **Creates / re\u2011uses an `urllib3.PoolManager`** (`self.poolmanager`)  \n3. Calls `pool.urlopen(...)` (or `pool.connection_from_url(...)`) to perform the actual HTTP operation.\n\n`urllib3.PoolManager` owns a pool of HTTP connections and is responsible for:\n\n* opening sockets (`socket.create_connection`)  \n* writing the HTTP request line and headers  \n* sending the body (if any)  \n* reading the response status line, headers and body  \n* handling redirects, keep\u2011alive, SSL/TLS, etc.\n\nThe `HTTPAdapter.send()` method collects the response from `urllib3`, wraps it in a `requests.models.Response` object, copies useful metadata (cookies, history) back into the `PreparedRequest`, and returns the `Response`.\n\n---\n\n### 6. Summary of the network path\n\n1. **`requests.get(url)`** \u2192 `api.request()`  \n2. `api.request()` \u2192 `Session.request()`  \n3. `Session.request()` builds a `PreparedRequest` and calls `Session.send()`  \n4. `Session.send()` retrieves the adapter for the URL scheme (`HTTPAdapter`)  \n5. `HTTPAdapter.send()` delegates to `urllib3.PoolManager` which\n   * opens a socket to the host,\n   * writes the HTTP request,\n   * reads the HTTP response.  \n\nThat socket activity is the only real network I/O in the library; everything else is pure Python glue between the high\u2011level API and `urllib3`.",
+      "sources": [
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "601-660"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "lines": "651-710"
+        },
+        {
+          "file": "src/requests/__init__.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "151-210"
+        },
+        {
+          "file": "tests/test_lowlevel.py",
+          "lines": "151-210"
+        },
+        {
+          "file": "src/requests/api.py",
+          "lines": "1-60"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 362,
+        "ttft_ms": 984,
+        "total_ms": 2150
+      },
+      "error": null,
+      "id": "req-flow-1",
+      "repo": "requests",
+      "kind": "flow",
+      "question": "How does a call to requests.get() end up being sent over the network by the transport adapter?",
+      "citations": null
+    },
+    {
+      "answer": "**Redirect flow**\n\n1. The public `Session.request()` method builds a `PreparedRequest` and sends it with `Session.send()`.  \n2. `Session.send()` (in *src/requests/sessions.py*) performs the HTTP call via an adapter and then calls `Session.resolve_redirects()` if the response is a redirect and `allow_redirects` is `True`.  \n3. `resolve_redirects()` is a generator that:\n\n   * keeps a list `hist` of previous `Response` objects.  \n   * calls `Session.get_redirect_target(resp)` to get the new URL (`resp.headers[\"Location\"]` by default).  \n   * while a target URL exists:\n     * clones the original request (`req.copy()`), updates its URL, and removes or rewrites headers that must not be sent to the new host (see the *Authorization* logic below).  \n     * yields the new `Response` from the adapter, attaches the current `hist` to its `history` attribute, and updates the history list.  \n   * When no further redirect target is found, the generator ends and the last `Response` is returned as the final result.  \n\n   This logic is in the section starting at line\u202f151 of *src/requests/sessions.py* (`resolve_redirects` function).  \n\n**When the `Authorization` header is dropped**\n\nThe decision to strip the `Authorization` (and `Proxy-Authorization`) header is made in `Session.should_strip_auth(old_url, new_url)` \u2013 lines\u202f166\u2011194 of *src/requests/sessions.py*.\n\n```py\ndef should_strip_auth(self, old_url: str, new_url: str) -> bool:\n    old_parsed = urlparse(old_url)\n    new_parsed = urlparse(new_url)\n\n    # 1. Different host \u2192 drop header\n    if old_parsed.hostname != new_parsed.hostname:\n        return True\n\n    # 2. http \u2192 https on the same host with standard ports \u2192 keep header\n    if (old_parsed.scheme == \"http\" and old_parsed.port in (80, None) and\n        new_parsed.scheme == \"https\" and new_parsed.port in (443, None)):\n        return False\n\n    # 3. Same scheme, same default port \u2192 keep header\n    changed_port = old_parsed.port != new_parsed.port\n    changed_scheme = old_parsed.scheme != new_parsed.scheme\n    default_port = (DEFAULT_PORTS.get(old_parsed.scheme, None), None)\n    if (not changed_scheme and old_parsed.port in default_port and\n        new_parsed.port in default_port):\n        return False\n\n    # 4. All other cases: drop header\n    return changed_port or changed_scheme\n```\n\n* In `resolve_redirects()` the request that is sent to the next URL is built like this:\n\n```py\nif self.should_strip_auth(req.url, url):\n    req.headers.pop(\"Authorization\", None)\n    req.headers.pop(\"Proxy-Authorization\", None)\n```\n\n* Thus the header is **removed** when the redirect changes the host, or when the scheme/port changes in a way that is not covered by the two special cases above (http\u2192https on the same host with standard ports, or same scheme/port with default ports).\n\n**Summary**\n\n* Redirects are followed by repeatedly calling `Session.get_redirect_target()`, cloning the previous request, adjusting the URL, stripping disallowed headers, and sending the new request through the adapter.  \n* The `Authorization` header is dropped whenever `should_strip_auth()` returns `True`, i.e., when the redirect goes to a different host, or when the scheme or port changes in a way that is not explicitly allowed (http\u2192https on same host with standard ports or same scheme/port with default ports). The logic is in *src/requests/sessions.py* lines\u202f166\u2011194.",
+      "sources": [
+        {
+          "file": "HISTORY.md",
+          "lines": "2001-2060"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "lines": "151-210"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "2301-2360"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1951-2010"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "201-260"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1301-1360"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "301-360"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1201-1260"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 188,
+        "ttft_ms": 888,
+        "total_ms": 1734
+      },
+      "error": null,
+      "id": "req-flow-2",
+      "repo": "requests",
+      "kind": "flow",
+      "question": "How are redirects followed, and when is the Authorization header dropped during a redirect?",
+      "citations": null
+    },
+    {
+      "answer": "When a request is sent with an instance of **`HTTPDigestAuth`**, the auth object is called *before* the first HTTP round\u2011trip.  \nIn that call the object\n\n1. **Adds an initial `Authorization` header** (even if the server has not yet issued a challenge).  \n   The header is built from the user, password and the *current* digest state \u2013 at first the state is empty, so the header contains only the username, realm, nonce and URI, but no `response` field (see `HTTPDigestAuth._build_digest_header` in `src/requests/auth.py`).\n\n2. **Returns the prepared request** to `Session.send`.\n\nAfter the request reaches the server the response arrives back at `Session.send`.  \nThe session then checks whether the response was a **401 Unauthorized** and whether the response contains a `WWW\u2011Authenticate` header that advertises **Digest** authentication.  \nIf so, the session calls the auth object again with the *same* request but **with the new challenge information** parsed from that header.  \nThe auth object updates its internal state (nonce, qop, nc, cnonce, etc.) and rebuilds the `Authorization` header, this time including the correct `response` value (the hash calculated with the password and the challenge data).  \nThe request is then **resubmitted** automatically.  \n\nIn code this logic lives in `requests/auth.py` (around line\u202f200) where `HTTPDigestAuth.__call__` checks `auth._handle_401`:\n\n```py\ndef __call__(self, r):\n    if r.response is not None and r.response.status_code == 401:\n        # 401 received \u2192 parse challenge & retry\n        return self._handle_401(r)\n    # otherwise just add the header once\n    return self._build_digest_header(r.request)\n```\n\nand in `Session.send` (see `src/requests/sessions.py` lines\u202f140\u2011170) after a response is received:\n\n```py\nif (\n    resp.status_code == 401\n    and request.auth\n    and request.auth.is_digest\n):\n    # retry with updated Authorization header\n    auth = request.auth\n    request = auth._handle_401(request, resp)\n    resp = self.send(request, **kwargs)\n```\n\nThis flow is exactly what the low\u2011level tests exercise:  \n\n* The first `GET` gets a `401` with a `WWW\u2011Authenticate: Digest \u2026` header.  \n* `HTTPDigestAuth` parses that header, builds a correct `Authorization` header and resends the request.  \n* If the server again returns a `401`, the auth object stops retrying (the tests `test_digestauth_401_only_sent_once` and `test_DIGESTAUTH_WRONG_HTTP_401_GET` confirm that a second challenge does **not** trigger another retry).  \n\nSo, the retry is performed by the auth object rebuilding the request with the new `Authorization` header and re\u2011issuing it through the session, but only once per 401 challenge.",
+      "sources": [
+        {
+          "file": "tests/test_requests.py",
+          "lines": "751-810"
+        },
+        {
+          "file": "tests/test_lowlevel.py",
+          "lines": "201-260"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "lines": "301-360"
+        },
+        {
+          "file": "tests/test_lowlevel.py",
+          "lines": "151-210"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "801-860"
+        },
+        {
+          "file": "tests/test_lowlevel.py",
+          "lines": "251-310"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "2051-2102"
+        },
+        {
+          "file": "src/requests/auth.py",
+          "lines": "1-60"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 111,
+        "ttft_ms": 1278,
+        "total_ms": 1978
+      },
+      "error": null,
+      "id": "req-flow-3",
+      "repo": "requests",
+      "kind": "flow",
+      "question": "How does HTTP Digest authentication retry the request after the server responds with a 401 challenge?",
+      "citations": null
+    },
+    {
+      "answer": "The default maximum number of redirects that a `requests.Session` will follow is **30**.  \nThis value is defined in the `Session` class in *src/requests/sessions.py* as the `max_redirects` attribute on the session object:\n\n```py\nclass Session(object):\n    ...\n    def __init__(self, **kwargs):\n        ...\n        self.max_redirects = 30          # <\u2011\u2011 default\n        ...\n```\n\nThe code that enforces this limit is in the same file, within the redirect loop in `Session.send` (see lines 201\u2011260). When the history length reaches `self.max_redirects`, a `TooManyRedirects` exception is raised.",
+      "sources": [
+        {
+          "file": "HISTORY.md",
+          "lines": "1951-2010"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "251-310"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "lines": "201-260"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "2001-2060"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "2301-2360"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "2601-2660"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1301-1360"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "701-760"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 116,
+        "ttft_ms": 714,
+        "total_ms": 840
+      },
+      "error": null,
+      "id": "req-cfg-1",
+      "repo": "requests",
+      "kind": "config",
+      "question": "What is the default maximum number of redirects a session will follow, and where is it set?",
+      "citations": null
+    },
+    {
+      "answer": "The TLS CA bundle that `requests` will use can be overridden by two environment variables:\n\n| Variable | Effect | Priority |\n|----------|--------|----------|\n| `REQUESTS_CA_BUNDLE` | Path to a custom CA bundle that `requests` should load. | Highest \u2013 if set (even to an empty string) it overrides the default. |\n| `CURL_CA_BUNDLE` | Path to a custom CA bundle that will be used if `REQUESTS_CA_BUNDLE` is not set. | Used only when `REQUESTS_CA_BUNDLE` is not defined. |\n\nWhen a `Session` calls `merge_environment_settings`, the logic in `tests/test_requests.py` shows that the settings dict will set the `\"verify\"` key to the value of `REQUESTS_CA_BUNDLE` if present, otherwise to `CURL_CA_BUNDLE`, and if neither is set it falls back to `True` (the default, which makes `requests` load the bundled CA file from `certifi`). Thus those two environment variables are the ones that control the CA certificate bundle used for TLS verification.",
+      "sources": [
+        {
+          "file": "src/requests/certs.py",
+          "lines": "1-18"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "1001-1060"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "lines": "601-660"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "451-510"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "651-710"
+        },
+        {
+          "file": "src/requests/api.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "151-210"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "301-360"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 150,
+        "ttft_ms": 834,
+        "total_ms": 1009
+      },
+      "error": null,
+      "id": "req-cfg-2",
+      "repo": "requests",
+      "kind": "config",
+      "question": "Which environment variables control the CA certificate bundle used for TLS verification?",
+      "citations": null
+    },
+    {
+      "answer": "The adapter is instantiated with the following defaults (see the class\u2011initialiser in **src/requests/adapters.py**):\n\n| Parameter | Default value | Meaning |\n|-----------|---------------|---------|\n| `pool_connections` (the number of connection pools cached) | `DEFAULT_POOLSIZE` \u2013\u202f10 | The size of the connection pool that is created for each scheme (HTTP/HTTPS). |\n| `pool_maxsize` (max connections per pool) | `DEFAULT_POOLSIZE` \u2013\u202f10 | The maximum number of connections that can be kept open in a single pool. |\n| `max_retries` | `DEFAULT_RETRIES` \u2013\u202f0 retries (`Retry(0, read=False)`) | No automatic retries are performed by default; the adapter simply raises on connection errors. |\n\nThese defaults are set in `HTTPAdapter.__init__`:\n\n* The `pool_connections` and `pool_maxsize` are stored and used to initialise the `PoolManager` (`init_poolmanager` in lines\u202f251\u2011260).  \n* If `max_retries` is the sentinel `DEFAULT_RETRIES`, the adapter creates `Retry(0, read=False)` \u2013 i.e., zero retries (see lines\u202f201\u2011210).  \n\nThus, by default the HTTP adapter uses a 10\u2011connection pool per scheme and does **not** retry failed connections.",
+      "sources": [
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "151-210"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "251-310"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "201-260"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "501-560"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "451-510"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "701-748"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1301-1360"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 121,
+        "ttft_ms": 833,
+        "total_ms": 1131
+      },
+      "error": null,
+      "id": "req-cfg-3",
+      "repo": "requests",
+      "kind": "config",
+      "question": "What are the default connection pool size and retry count for the HTTP adapter?",
+      "citations": null
+    },
+    {
+      "answer": "`Session.should_strip_auth` decides whether the **Authorization** header should be removed when a response is followed by a redirect.\n\nThe decision is based on the relationship between the *old* URL (the URL that produced the redirect) and the *new* URL (the redirect target). The method performs the following checks in order:\n\n1. **Different host** \u2013 If the hostnames differ, the header must be stripped.  \n   ```py\n   if old_parsed.hostname != new_parsed.hostname:\n       return True\n   ```\n\n2. **HTTP \u2192 HTTPS on standard ports** \u2013  \n   A redirect from `http://host:80` to `https://host:443` is allowed to keep the header even though the scheme changes.  \n   ```py\n   if (\n       old_parsed.scheme == \"http\"\n       and old_parsed.port in (80, None)\n       and new_parsed.scheme == \"https\"\n       and new_parsed.port in (443, None)\n   ):\n       return False\n   ```\n\n3. **Same\u2011scheme, non\u2011standard ports** \u2013  \n   If the scheme stays the same but the port changes from a non\u2011standard value to another non\u2011standard value (e.g., 8080 \u2192 8443), the header is stripped.  \n   ```py\n   changed_port = old_parsed.port != new_parsed.port\n   changed_scheme = old_parsed.scheme != new_parsed.scheme\n   ```\n\n4. **Default port handling** \u2013  \n   When both the old and new URLs use the default port for their respective schemes (e.g., `http://host:80` \u2194 `http://host`), the header is **not** stripped.  \n   ```py\n   default_port = (DEFAULT_PORTS.get(old_parsed.scheme, None), None)\n   if (\n       not changed_scheme\n       and old_parsed.port in default_port\n       and new_parsed.port in default_port\n   ):\n       return False\n   ```\n\n5. **All other cases** \u2013  \n   The header is stripped if the scheme changes or the port changes (after applying the above special\u2011case rules).  \n   ```py\n   return changed_port or changed_scheme\n   ```\n\nThus, `should_strip_auth` removes the Authorization header when the redirect involves:\n\n- a different hostname,\n- a non\u2011standard port change,\n- a scheme change that isn\u2019t an allowed http\u2192https transition on standard ports, or\n- any other combination of scheme/port changes not covered by the special cases.",
+      "sources": [
+        {
+          "file": "src/requests/sessions.py",
+          "lines": "151-210"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "1951-2010"
+        },
+        {
+          "file": "src/requests/auth.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "751-810"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "701-760"
+        },
+        {
+          "file": "src/requests/auth.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "2051-2102"
+        },
+        {
+          "file": "tests/test_utils.py",
+          "lines": "151-210"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 118,
+        "ttft_ms": 1084,
+        "total_ms": 1766
+      },
+      "error": null,
+      "id": "req-id-1",
+      "repo": "requests",
+      "kind": "identifier",
+      "question": "What does should_strip_auth check?",
+      "citations": null
+    },
+    {
+      "answer": "`ITER_CHUNK_SIZE` is a constant defined in **src/requests/models.py** at lines\u202f101\u2011160:\n\n```py\nITER_CHUNK_SIZE: int = 512\n```\n\nIt is used as the default value for the `chunk_size` argument of the `Response.iter_content()` method (and indirectly by `Response.iter_lines()` which forwards the value). In `iter_content` the parameter is declared as\n\n```py\ndef iter_content(self, chunk_size: int | None = 1, ...):\n    ...\n```\n\nand the default is overridden by the module\u2011wide constant:\n\n```py\nchunk_size: int | None = ITER_CHUNK_SIZE\n```\n\nThus `ITER_CHUNK_SIZE` controls the default byte\u2011chunk size read from a streamed response.",
+      "sources": [
+        {
+          "file": "src/requests/models.py",
+          "lines": "951-1010"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "901-960"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "1501-1560"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "1001-1060"
+        },
+        {
+          "file": "src/requests/utils.py",
+          "lines": "601-660"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "651-710"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1001-1060"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 119,
+        "ttft_ms": 1023,
+        "total_ms": 1085
+      },
+      "error": null,
+      "id": "req-id-2",
+      "repo": "requests",
+      "kind": "identifier",
+      "question": "What is ITER_CHUNK_SIZE and which method uses it?",
+      "citations": null
+    },
+    {
+      "answer": "`dispatch_hook` is the central routine that runs a user\u2011defined hook (or a list of hooks) for a particular event \u2013 currently only the `\"response\"` event is supported by the library.\n\n```py\ndef dispatch_hook(\n    key: str,\n    hooks: _t.HooksInputType | None,\n    hook_data: Response,\n    **kwargs: Any,\n) -> Response:\n```\n\n* `key` \u2013 the event name (`\"response\"`).\n* `hooks` \u2013 a mapping supplied by the caller (typically the `hooks` argument to a `Request` or `Session`). It may be `None`, a dictionary, a single callable, or a list of callables.\n* `hook_data` \u2013 the object that the hooks should operate on (for the response hook this is a `Response` instance).\n* `**kwargs` \u2013 any additional keyword arguments that should be passed through to each hook.\n\nThe function proceeds as follows:\n\n1. Normalises `hooks` to a dictionary (`hooks_dict`) and looks up the list of hooks for `key`.  \n   ```py\n   hooks_dict = hooks or {}\n   hook_list: Iterable[_t.HookType] | _t.HookType | None = hooks_dict.get(key)\n   ```\n\n2. If the retrieved value is a single callable, it is wrapped into a list so the logic below can iterate uniformly.  \n   ```py\n   if isinstance(hook_list, Callable):\n       hook_list = [hook_list]\n   ```\n\n3. Each hook is called in sequence, passing `hook_data` and any `**kwargs`.  \n   The return value of a hook replaces the current `hook_data` **only if the hook returns a non\u2011`None` value**.  \n   This allows hooks to mutate the response in\u2011place or return a modified instance.  \n   ```py\n   for hook in hook_list:\n       _hook_data = hook(hook_data, **kwargs)\n       if _hook_data is not None:\n           hook_data = _hook_data\n   ```\n\n4. After all hooks have run, the (possibly modified) `hook_data` is returned.  \n\nThe behaviour is tested in `tests/test_hooks.py`:\n\n* Passing a single function returns the result of that function (`hooks.dispatch_hook(\"response\", {\"response\": hook}, \"Data\") == \"ata\"`).\n* Passing a list with a `None`\u2011returning hook keeps the chain alive (`[\"hook\", lambda x: None, \"hook\"]` yields `\"ta\"`).\n\nThus, `dispatch_hook` orchestrates the execution of hooks for an event, allowing each hook to optionally transform the data it receives.",
+      "sources": [
+        {
+          "file": "src/requests/hooks.py",
+          "lines": "1-48"
+        },
+        {
+          "file": "tests/test_hooks.py",
+          "lines": "1-22"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "601-660"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "251-310"
+        },
+        {
+          "file": "src/requests/api.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "301-360"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "1201-1260"
+        },
+        {
+          "file": "src/requests/api.py",
+          "lines": "101-160"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 111,
+        "ttft_ms": 677,
+        "total_ms": 1345
+      },
+      "error": null,
+      "id": "req-id-3",
+      "repo": "requests",
+      "kind": "identifier",
+      "question": "What does dispatch_hook do?",
+      "citations": null
+    },
+    {
+      "answer": "The endpoint that streams chat answers is defined in **`backend/main.py`** as a POST route named `/chat`.  \nIt is registered with the FastAPI `app` object and returns a `StreamingResponse` that feeds the generator from `agent.stream_answer`.\n\n```py\n@app.post(\"/chat\")\ndef chat(body: ChatRequest):\n    if body.repo_url not in _indexed_repos:\n        raise HTTPException(\n            status_code=404,\n            detail=f\"Repository not indexed. POST /index first: {body.repo_url}\",\n        )\n\n    indexer = _indexed_repos[body.repo_url][\"indexer\"]\n\n    return StreamingResponse(\n        agent.stream_answer(indexer, body.question, body.history),\n        media_type=\"text/event-stream\",\n        headers={\"Cache-Control\": \"no-cache\", \"X-Accel-Buffering\": \"no\"},\n    )\n```\n\nThis is the HTTP endpoint that answers chat questions. [lines\u202f151\u2011178]",
+      "sources": [
+        {
+          "file": "frontend/src/components/ChatPanel.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/src/components/ChatPanel.jsx",
+          "lines": "201-260"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/llm_client.py",
+          "lines": "1-53"
+        },
+        {
+          "file": "backend/agent.py",
+          "lines": "51-80"
+        },
+        {
+          "file": "frontend/src/components/MessageBubble.jsx",
+          "lines": "251-310"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "151-178"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "51-110"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 151,
+        "ttft_ms": 1064,
+        "total_ms": 1240
+      },
+      "error": null,
+      "id": "cqa-def-1",
+      "repo": "codebase-qa-agent",
+      "kind": "definition",
+      "question": "Where is the HTTP endpoint that answers chat questions defined?",
+      "citations": null
+    },
+    {
+      "answer": "The **`RepoSummaryCard` component** is the one that displays the timing information for the indexing run.  \nIt receives the `stats` object via its `props` (passed from `App.jsx` when `showSummary` is true) and renders the various timing metrics (clone, chunk, embed, summary, total) on the card. This is where the elapsed time for indexing a repository is shown.",
+      "sources": [
+        {
+          "file": "frontend/src/App.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "151-178"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "backend/agent.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/src/components/IndexPanel.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "render.yaml",
+          "lines": "1-23"
+        },
+        {
+          "file": "frontend/src/components/RepoSummaryCard.jsx",
+          "lines": "251-310"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 137,
+        "ttft_ms": 784,
+        "total_ms": 849
+      },
+      "error": null,
+      "id": "cqa-def-2",
+      "repo": "codebase-qa-agent",
+      "kind": "definition",
+      "question": "Which frontend component shows how long indexing took on the repo summary card?",
+      "citations": null
+    },
+    {
+      "answer": "The system prompt that instructs the LLM to cite files is defined in **`backend/agent.py`**:\n\n```py\nSYSTEM_PROMPT = (\n    \"You are an expert code archaeologist. Answer questions about a GitHub repository \"\n    \"using retrieved code chunks. Always cite files using [filename:lines] notation inline. \"\n    \"Trace actual call flows through the code. Be precise and concise. \"\n    \"If context is insufficient, say so clearly.\"\n)\n```\n\nThis prompt appears in the file `backend/agent.py` and is used when building the messages sent to the LLM in `stream_answer`.",
+      "sources": [
+        {
+          "file": "backend/summarizer.py",
+          "lines": "101-148"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/agent.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/summarizer.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/vercel.json",
+          "lines": "1-5"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "251-310"
+        },
+        {
+          "file": "docker-compose.yml",
+          "lines": "1-18"
+        },
+        {
+          "file": "frontend/package.json",
+          "lines": "1-19"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 191,
+        "ttft_ms": 905,
+        "total_ms": 1062
+      },
+      "error": null,
+      "id": "cqa-def-3",
+      "repo": "codebase-qa-agent",
+      "kind": "definition",
+      "question": "Where is the system prompt that tells the model to cite files defined?",
+      "citations": null
+    },
+    {
+      "answer": "In `backend/main.py` the **indexing endpoint** (`/index`) performs the four main steps of the pipeline:\n\n1. **clone**  \n2. **chunk**  \n3. **build_index** (embed the chunks)  \n4. **save_metadata** (store stats and the summary)\n\nThe summary generation can be expensive, but it does **not** need the embeddings.  \nTo keep the user from waiting for the entire embedding run, the code starts the\nsummary request **in a background thread** while the main thread continues\nbuilding the index.\n\n```py\n# inside /index handler  (lines ~151\u2011178)\ndef index_repo(body: IndexRequest):\n    ...\n    indexer = RepoIndexer(repo_url)\n    ...\n    # 1. clone\n    indexer.clone()\n    # 2. chunk\n    stats = indexer.chunk()\n\n    # 3. start the summary in a background thread\n    def timed_summary():\n        t0 = time.perf_counter()\n        result = summarizer.generate_repo_summary(\n            indexer, indexer.repo_dir, repo_url\n        )\n        timings[\"summary\"] = _ms_since(t0)\n        return result\n\n    with ThreadPoolExecutor(max_workers=1) as pool:\n        summary_future = pool.submit(timed_summary)   # <-- launch summary\n        t = time.perf_counter()\n        indexer.build_index()                        # <-- embed in main thread\n        timings[\"embed\"] = _ms_since(t)\n\n    summary = summary_future.result()                # wait for summary\n    indexer.save_metadata(stats, summary)\n```\n\n**Explanation of the flow**\n\n1. **`timed_summary`** is a local function that calls `summarizer.generate_repo_summary`.  \n2. A `ThreadPoolExecutor` with a single worker is created.  \n3. `pool.submit(timed_summary)` schedules the summary generation in the worker\n   thread and immediately returns a `Future` (`summary_future`).  \n4. While the worker thread is busy running the summary LLM call, the main\n   thread continues to execute `indexer.build_index()`, which streams the\n   chunks to Chroma and performs the embeddings.  \n5. After `build_index` finishes, `summary_future.result()` blocks until the\n   summary thread completes, guaranteeing that the summary is available before\n   `save_metadata` is called.\n\nThus, **embedding and summary generation run concurrently**: the summary runs\nin a background thread, overlapping its LLM call with the CPU\u2011bound embedding\nstep. This design reduces overall wall\u2011clock time while keeping the API\nresponsive.",
+      "sources": [
+        {
+          "file": "backend/indexer.py",
+          "lines": "201-260"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "frontend/src/components/IndexPanel.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "151-178"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "frontend/src/App.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/summarizer.py",
+          "lines": "101-148"
+        },
+        {
+          "file": "docker-compose.yml",
+          "lines": "1-18"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 140,
+        "ttft_ms": 885,
+        "total_ms": 1336
+      },
+      "error": null,
+      "id": "cqa-flow-1",
+      "repo": "codebase-qa-agent",
+      "kind": "flow",
+      "question": "How does indexing run the repo summary at the same time as embedding?",
+      "citations": null
+    },
+    {
+      "answer": "### High\u2011level flow\n\n| Step | Where it happens | What is sent | What the browser does |\n|------|------------------|--------------|-----------------------|\n| 1. | **Client** \u2013 user presses *Enter* (or clicks the arrow) \u2192 `ChatPanel.sendMessage` | Calls `streamChat(repo, trimmed, history, cb)` | `streamChat` opens a **Server\u2011Sent Events** (SSE) connection to `/chat` (the exact URL is in `../lib/api.js`) and registers `cb` as the event\u2011handler. |\n| 2. | **Server** \u2013 `ChatPanel.sendMessage` \u2192 **FastAPI endpoint** (see `backend/main.py`) | `POST /chat?repo_url=\u2026` with body `{question, history}` | The endpoint creates a `StreamingResponse` that streams the output of `agent.stream_answer(indexer, question, history)` as **text/event\u2011stream**. |\n| 3. | **Backend** \u2013 `agent.stream_answer` (see `backend/agent.py`) | 1. **Sources** \u2013 immediately after a quick retrieval: `data: {\"type\":\"sources\", ...}\\n\\n`  <br>2. **Text** \u2013 as the LLM emits tokens: `data: {\"type\":\"text\",\"content\":\"\u2026\"}\\n\\n`  <br>3. **Timings** \u2013 after the stream completes: `data: {\"type\":\"timings\",...}\\n\\n`  <br>4. **[DONE]** \u2013 terminator: `data: [DONE]\\n\\n` | The generator yields these strings one by one; Starlette iterates the generator in a worker thread so the event\u2011loop stays free. |\n| 4. | **Frontend** \u2013 event\u2011handler (`cb`) receives each `event` | The handler parses the JSON in `event.data` and updates the `messages` state accordingly: <br>*text* \u2192 appends to the last assistant bubble, <br>*sources* \u2192 records sources, <br>*timings* \u2192 attaches timings, <br>*done/error* \u2192 stops streaming and clears the loading flag. | Each update re\u2011renders the chat list; the scrolling effect is handled by the second `useEffect` that scrolls to the bottom when `messages` changes. |\n\n---\n\n### Detailed step\u2011by\u2011step\n\n1. **User input**  \n   `sendMessage` trims the text, builds the *history* array (`messages.filter(m => !m.streaming)` \u2192 `trimmed_history`), and pushes a placeholder assistant bubble (`streaming:true`).  \n   It then calls  \n\n   ```js\n   abortRef.current = streamChat(repo, trimmed, history, (event) => { \u2026 })\n   ```\n\n   (see `frontend/src/components/ChatPanel.jsx` lines 51\u2011110).  \n   `streamChat` is a thin wrapper around `fetch(..., { signal })` that parses each SSE `event` and forwards the payload to the callback.\n\n2. **SSE request**  \n   `fetch` targets the FastAPI route defined in `backend/main.py`.  \n   The route verifies the repo is indexed and returns\n\n   ```python\n   return StreamingResponse(\n       agent.stream_answer(indexer, body.question, body.history),\n       media_type=\"text/event-stream\",\n       headers={\"Cache-Control\": \"no-cache\", \"X-Accel-Buffering\": \"no\"},\n   )\n   ```\n\n3. **Generator `agent.stream_answer`**  \n   ```py\n   t_start = time.perf_counter()\n   chunks = indexer.query(question, n_results=8)          # retrieval\n   retrieval_ms = _ms_since(t_start)\n\n   # \u2460 sources\n   yield f\"data: {json.dumps({'type':'sources','sources':sources})}\\n\\n\"\n   ```\n\n   - `indexer.query` runs the vector search and returns the top chunks.  \n   - Immediately after the search, the generator yields the **sources** event.\n\n   ```py\n   # Build context string\n   context_block = \"\\n\\n\".join([...])   # each chunk as a fenced\u2011code block\n\n   # \u2461 build messages for the LLM\n   messages = [{\"role\":\"system\",\"content\":SYSTEM_PROMPT}]\n   messages.extend(trimmed_history)\n   messages.append({\"role\":\"user\",\"content\":f\"Relevant code context:\\n\\n{context_block}\\n\\nQuestion: {question}\"})\n\n   client = llm_client.get_llm_client()\n   stream = client.chat.completions.create(\n       model=model,\n       messages=messages,\n       max_tokens=MAX_TOKENS,\n       stream=True,\n       **llm_client.get_request_options(),\n   )\n   ```\n\n   - The LLM request is **streaming** (`stream=True`).  \n   - For every chunk from the LLM:\n\n   ```py\n   for chunk in stream:\n       if not chunk.choices: continue\n       delta = chunk.choices[0].delta\n       if delta.content:\n           if ttft_ms is None: ttft_ms = _ms_since(t_start)\n           yield f\"data: {json.dumps({'type':'text','content':delta.content})}\\n\\n\"\n   ```\n\n     * Each non\u2011empty token (`delta.content`) becomes a **text** event.  \n     * The first token sets `ttft_ms` (time to first token).\n\n   - After the LLM stream ends:\n\n   ```py\n   timings = {\"retrieval_ms\": retrieval_ms,\n              \"ttft_ms\": ttft_ms,\n              \"total_ms\": _ms_since(t_start)}\n   yield f\"data: {json.dumps({'type':'timings',**timings})}\\n\\n\"\n   yield \"data: [DONE]\\n\\n\"\n   ```\n\n     * A **timings** event is sent.  \n     * Finally a `[DONE]` event signals the end of the response.\n\n4. **Front\u2011end handler**  \n   The callback passed to `streamChat` receives each event:\n\n   ```js\n   if (event.type === 'text') { \u2026 }\n   else if (event.type === 'sources') { \u2026 }\n   else if (event.type === 'timings') { \u2026 }\n   else if (event.type === 'done' || event.type === 'error') { \u2026 }\n   ```\n\n   * **text** \u2013 appends content to the last assistant bubble (`streaming:true`).  \n   * **sources** \u2013 stores the list of files/lines.  \n   * **timings** \u2013 attaches the timings object to the bubble.  \n   * **done/error** \u2013 marks `streaming:false` and clears the `loading` flag.  \n   The UI re\u2011renders immediately; the `useEffect` that watches `messages` scrolls the chat view to the bottom.\n\n---\n\n### Result\n\nFrom the moment the user submits a question, the server immediately returns a stream that",
+      "sources": [
+        {
+          "file": "frontend/src/components/ChatPanel.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/agent.py",
+          "lines": "51-80"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "151-178"
+        },
+        {
+          "file": "frontend/src/components/MessageBubble.jsx",
+          "lines": "51-110"
+        },
+        {
+          "file": "frontend/src/components/ChatPanel.jsx",
+          "lines": "51-110"
+        },
+        {
+          "file": "frontend/src/components/IndexPanel.jsx",
+          "lines": "51-110"
+        },
+        {
+          "file": "backend/agent.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/src/components/ChatPanel.jsx",
+          "lines": "201-260"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 1522,
+        "ttft_ms": 2201,
+        "total_ms": 3668
+      },
+      "error": null,
+      "id": "cqa-flow-2",
+      "repo": "codebase-qa-agent",
+      "kind": "flow",
+      "question": "How is a chat answer streamed from the server to the browser, from retrieval to the final [DONE] event?",
+      "citations": null
+    },
+    {
+      "answer": "When the backend is started (or restarted) it rebuilds the in\u2011memory index map from the on\u2011disk ChromaDB store.\n\n1. **ChromaDB persistence**  \n   The `CHROMA_PERSIST_DIR` environment variable is set by the `docker\u2011compose.yml` volume (line 12\u201113).  \n   ```yaml\n   CHROMA_PERSIST_DIR: /data/chroma\n   ```  \n   The Chroma client created by `_get_chroma_client()` points to this directory, so all collections created during previous indexing runs are still present on disk.\n\n2. **Loading persisted collections**  \n   In `backend/indexer.py` the function `load_persisted_repos()` iterates over every collection that the Chroma client sees:\n\n   ```py\n   def load_persisted_repos() -> list[dict]:\n       client = _get_chroma_client()\n       repos = []\n       for col in client.list_collections():\n           meta = col.metadata or {}\n           if not meta.get(\"ready\"):\n               client.delete_collection(col.name)   # incomplete runs are dropped\n               continue\n\n           indexer = RepoIndexer(meta[\"repo_url\"])\n           indexer._collection = client.get_collection(\n               name=col.name, embedding_function=_get_embed_fn()\n           )\n           repos.append({\n               \"repo_url\": meta[\"repo_url\"],\n               \"indexer\": indexer,\n               \"stats\": json.loads(meta[\"stats\"]),\n               \"summary\": json.loads(meta[\"summary\"]),\n           })\n       return repos\n   ```\n   * The function checks the collection metadata for a `ready` flag set by `RepoIndexer.save_metadata()`.  \n   * For each \u201cready\u201d collection it re\u2011instantiates a `RepoIndexer`, attaches the existing Chroma collection (`client.get_collection(...)`) and restores the stored statistics and summary.  \n   * Collections that were still in progress (`ready=False`) are removed, ensuring a clean state.\n\n3. **Populating the runtime map**  \n   The `main.py` module (or another startup routine) calls `load_persisted_repos()` and stores the result in the global dictionary `_indexed_repos`, which is used by the `/chat` and `/repos` endpoints:\n\n   ```py\n   _indexed_repos: dict[str, dict] = {}\n\n   # somewhere during startup\n   for repo in load_persisted_repos():\n       _indexed_repos[repo[\"repo_url\"]] = {\n           \"indexer\": repo[\"indexer\"],\n           \"stats\": repo[\"stats\"],\n           \"summary\": repo[\"summary\"],\n       }\n   ```\n\n   Because the `RepoIndexer` objects are created with the already\u2011persisted Chroma collection, all the previously indexed documents are immediately available for retrieval without re\u2011embedding.\n\n4. **Result**  \n   After a restart, the server queries the persisted ChromaDB collections, restores each repo\u2019s indexer, stats, and summary, and places them in `_indexed_repos`. Therefore the `/chat` and `/repos` endpoints continue to work as if the repo had never been re\u2011indexed.",
+      "sources": [
+        {
+          "file": "backend/indexer.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "201-260"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "151-178"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "docker-compose.yml",
+          "lines": "1-18"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "frontend/src/App.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/agent.py",
+          "lines": "1-60"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 125,
+        "ttft_ms": 1074,
+        "total_ms": 1628
+      },
+      "error": null,
+      "id": "cqa-flow-3",
+      "repo": "codebase-qa-agent",
+      "kind": "flow",
+      "question": "How does the server get back the repos it had already indexed after it restarts?",
+      "citations": null
+    },
+    {
+      "answer": "The `LLM_PROVIDER` environment variable selects which LLM provider to use.  \nIf `LLM_PROVIDER=groq` it uses the Groq endpoint; otherwise it defaults to the local Ollama endpoint.  \nThis is read in `backend/llm_client.py` when creating the OpenAI client.",
+      "sources": [
+        {
+          "file": "docker-compose.yml",
+          "lines": "1-18"
+        },
+        {
+          "file": "backend/llm_client.py",
+          "lines": "1-53"
+        },
+        {
+          "file": "frontend/vite.config.js",
+          "lines": "1-9"
+        },
+        {
+          "file": "render.yaml",
+          "lines": "1-23"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "frontend/package.json",
+          "lines": "1-19"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "151-178"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 186,
+        "ttft_ms": 583,
+        "total_ms": 691
+      },
+      "error": null,
+      "id": "cqa-cfg-1",
+      "repo": "codebase-qa-agent",
+      "kind": "config",
+      "question": "Which environment variable chooses between the local and the hosted LLM provider?",
+      "citations": null
+    },
+    {
+      "answer": "**In the code**\n\n- The ChromaDB persistence location is taken from the `CHROMA_PERSIST_DIR` environment variable (defaulting to `./chroma_data` if the variable isn\u2019t set).  \n  ```py\n  CHROMA_PERSIST_DIR = os.getenv(\"CHROMA_PERSIST_DIR\", \"./chroma_data\")   # [backend/indexer.py:1\u201115]\n  ```\n  All ChromaDB client initialisation (via `_get_chroma_client()`) uses this path internally, so the database files are written to that directory.\n\n**In Docker / Compose**\n\n- The `docker\u2011compose.yml` mounts a named Docker volume `chroma_data` onto the container path `/data/chroma` and sets the `CHROMA_PERSIST_DIR` environment variable to that path:\n  ```yml\n  services:\n    backend:\n      ...\n      environment:\n        CHROMA_PERSIST_DIR: /data/chroma   # [docker\u2011compose.yml:5\u201112]\n      volumes:\n        - chroma_data:/data/chroma        # [docker\u2011compose.yml:12\u201114]\n  volumes:\n    chroma_data:\n  ```\n\nThus:\n\n| Layer | Configuration | Effect |\n|-------|---------------|--------|\n| **Python code** | `CHROMA_PERSIST_DIR = os.getenv(\"CHROMA_PERSIST_DIR\", \"./chroma_data\")` | Default persistence directory (`./chroma_data`). |\n| **Docker Compose** | `CHROMA_PERSIST_DIR: /data/chroma` + `- chroma_data:/data/chroma` | Overrides the code default, pointing ChromaDB to the Docker\u2011volume mounted path `/data/chroma`. |\n\nThe database files are therefore stored in the Docker volume `chroma_data` on the host, mapped to `/data/chroma` inside the container. If the environment variable weren\u2019t overridden, the data would live in `./chroma_data` relative to the working directory.",
+      "sources": [
+        {
+          "file": "docker-compose.yml",
+          "lines": "1-18"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "render.yaml",
+          "lines": "1-23"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "201-260"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/vite.config.js",
+          "lines": "1-9"
+        },
+        {
+          "file": "frontend/package.json",
+          "lines": "1-19"
+        },
+        {
+          "file": "frontend/vercel.json",
+          "lines": "1-5"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 241,
+        "ttft_ms": 855,
+        "total_ms": 1310
+      },
+      "error": null,
+      "id": "cqa-cfg-2",
+      "repo": "codebase-qa-agent",
+      "kind": "config",
+      "question": "Where is the directory that ChromaDB saves the index to configured, both in code and in Docker?",
+      "citations": null
+    },
+    {
+      "answer": "The backend is deployed on Render using a **Docker** build.  \nRender reads the `render.yaml` file, which specifies:\n\n- `dockerfilePath: ./backend/Dockerfile`\n- `dockerContext: ./backend`\n- `runtime: docker`\n\nSo Render will build the Docker image from `backend/Dockerfile` and run it with the `free` plan.\n\nThe Render environment sets the following environment variable for the backend:\n\n```yaml\n- key: RERANKER_ENABLED\n  # Free tier has 512MB RAM; keep reranker off unless you upgrade\n  value: \"false\"\n```\n\nTherefore, **the reranker is disabled** in the Render deployment. The code in the backend checks this variable (e.g., in `main.py` or the indexing logic) and skips the reranker when it\u2019s `\"false\"`.",
+      "sources": [
+        {
+          "file": "docker-compose.yml",
+          "lines": "1-18"
+        },
+        {
+          "file": "frontend/src/components/IndexPanel.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "render.yaml",
+          "lines": "1-23"
+        },
+        {
+          "file": "frontend/package.json",
+          "lines": "1-19"
+        },
+        {
+          "file": "frontend/src/components/ChatPanel.jsx",
+          "lines": "251-310"
+        },
+        {
+          "file": "frontend/src/App.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/src/components/RepoSummaryCard.jsx",
+          "lines": "251-310"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "101-160"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 114,
+        "ttft_ms": 821,
+        "total_ms": 1070
+      },
+      "error": null,
+      "id": "cqa-cfg-3",
+      "repo": "codebase-qa-agent",
+      "kind": "config",
+      "question": "How is the backend configured for deployment on Render, and is the reranker turned on there?",
+      "citations": null
+    },
+    {
+      "answer": "`get_request_options()` returns a dictionary of provider\u2011specific keyword arguments to pass to `client.chat.completions.create()`.\n\n- If the environment variable `LLM_PROVIDER` is set to `\"groq\"`, it returns `{\"reasoning_effort\": \"low\"}`.  \n- For any other provider (the default `\"ollama\"`), it returns an empty dictionary `{}`.  \n\nThese options are used to tweak the LLM call, e.g., Groq\u2019s `gpt\u2011oss` model needs the `reasoning_effort` flag.",
+      "sources": [
+        {
+          "file": "backend/llm_client.py",
+          "lines": "1-53"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "backend/agent.py",
+          "lines": "51-80"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "151-178"
+        },
+        {
+          "file": "frontend/src/lib/api.js",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/src/components/RepoSummaryCard.jsx",
+          "lines": "351-400"
+        },
+        {
+          "file": "docker-compose.yml",
+          "lines": "1-18"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 129,
+        "ttft_ms": 645,
+        "total_ms": 769
+      },
+      "error": null,
+      "id": "cqa-id-1",
+      "repo": "codebase-qa-agent",
+      "kind": "identifier",
+      "question": "What does get_request_options return, and for which provider?",
+      "citations": null
+    },
+    {
+      "answer": "The `_complexity_label` function in **backend/summarizer.py** uses the following thresholds on the repository\u2019s file count:\n\n| Condition | Returned label |\n|-----------|----------------|\n| `file_count < 20` | `\"simple\"` |\n| `file_count > 200` | `\"complex\"` |\n| otherwise (20\u202f\u2264\u202f`file_count`\u202f\u2264\u202f200) | `\"moderate\"` |\n\nSo the thresholds are 20 and 200.",
+      "sources": [
+        {
+          "file": "frontend/src/components/RepoSummaryCard.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/src/components/MessageBubble.jsx",
+          "lines": "351-391"
+        },
+        {
+          "file": "frontend/src/components/RepoSummaryCard.jsx",
+          "lines": "201-260"
+        },
+        {
+          "file": "backend/summarizer.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "backend/requirements.txt",
+          "lines": "1-5"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "301-315"
+        },
+        {
+          "file": "backend/agent.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/src/components/ChatPanel.jsx",
+          "lines": "351-410"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 117,
+        "ttft_ms": 873,
+        "total_ms": 975
+      },
+      "error": null,
+      "id": "cqa-id-2",
+      "repo": "codebase-qa-agent",
+      "kind": "identifier",
+      "question": "What thresholds does _complexity_label use?",
+      "citations": null
+    },
+    {
+      "answer": "`MAX_REPO_SIZE_MB` is a module\u2011level constant that represents the maximum repository size (in megabytes) allowed for indexing.  \nIt is used in the helper `_check_github_repo_size` (see `backend/indexer.py` lines 51\u2011110).  \nThe function first queries the GitHub API for the repository size (in kilobytes), converts it to megabytes, and then raises a `ValueError` if the size exceeds `MAX_REPO_SIZE_MB`:\n\n```py\nsize_kb = data.get(\"size\", 0)\nsize_mb = size_kb / 1024\nif size_mb > MAX_REPO_SIZE_MB:\n    raise ValueError(\n        f\"Repository is {size_mb:.0f} MB, which exceeds the {MAX_REPO_SIZE_MB} MB limit. \"\n        \"Try a smaller repository.\"\n    )\n```\n\nThe constant itself is defined near the top of `backend/indexer.py` (the exact line number isn\u2019t shown in the snippets you provided, but it is in the same file). It is enforced only when `_check_github_repo_size` is called, which happens in `RepoIndexer.clone()` before the repository is actually cloned (see `backend/indexer.py` lines 151\u2011210). If the size check fails, the cloning step aborts and the request raises an HTTP 400 error.",
+      "sources": [
+        {
+          "file": "backend/indexer.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "151-210"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "201-260"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "render.yaml",
+          "lines": "1-23"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "151-178"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 113,
+        "ttft_ms": 708,
+        "total_ms": 918
+      },
+      "error": null,
+      "id": "cqa-id-3",
+      "repo": "codebase-qa-agent",
+      "kind": "identifier",
+      "question": "What is MAX_REPO_SIZE_MB and where is it enforced?",
+      "citations": null
+    }
+  ]
+}
