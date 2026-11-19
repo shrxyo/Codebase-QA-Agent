@@ -52,7 +52,8 @@ def validate_citations(answer: str, sources: list[dict], indexed_files) -> dict:
 
 
 def citation_summary(rows: list[dict]) -> dict:
-    checked = [r["citations"] for r in rows if r.get("citations") is not None]
+    # Skip failed questions (e.g. 429s): no answer is not an uncited answer.
+    checked = [r["citations"] for r in rows if r.get("citations") is not None and not r.get("error")]
     total = sum(c["total"] for c in checked)
     return {
         # Pooled: valid citations / all citations across the run.

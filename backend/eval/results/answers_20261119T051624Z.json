@@ -1,0 +1,1279 @@
+{
+  "timestamp": "20261119T051624Z",
+  "provider": "groq",
+  "model": "openai/gpt-oss-20b",
+  "sleep_s": 35.0,
+  "repos": {
+    "requests": {
+      "url": "https://github.com/psf/requests",
+      "commit": "3c7baaa05ab4aa49cc819ce3a819d260de19c157"
+    },
+    "codebase-qa-agent": {
+      "url": "https://github.com/shrxyo/Codebase-QA-Agent",
+      "commit": "918a8540eb440a6a9826554a734f1493c2c7545d"
+    }
+  },
+  "summary": {
+    "n": 24,
+    "errors": 14,
+    "retrieval_ms": {
+      "p50": 148.5,
+      "p95": 448.25
+    },
+    "ttft_ms": {
+      "p50": 934.0,
+      "p95": 2018.400000000001
+    },
+    "total_ms": {
+      "p50": 1241.5,
+      "p95": 2441.350000000001
+    },
+    "citation_validity": null,
+    "citations_checked": 0,
+    "mean_confidence": 0.0,
+    "answers_with_citations": 0,
+    "answers_checked": 10
+  },
+  "questions": [
+    {
+      "answer": "The HTTP headers are stored in a **`CaseInsensitiveDict`** \u2013 a custom dictionary that treats keys in a case\u2011insensitive manner.  \nThe class is defined in `src/requests/structures.py`:\n\n```py\nclass CaseInsensitiveDict(MutableMapping[str, _VT], Generic[_VT]):\n    ...\n```\n\nInstances of this class are used throughout Requests to hold header maps (e.g., `Response.headers`, the `default_headers()` function, etc.).",
+      "sources": [
+        {
+          "file": "src/requests/utils.py",
+          "lines": "951-1010"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "251-310"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "751-810"
+        },
+        {
+          "file": "src/requests/utils.py",
+          "lines": "551-610"
+        },
+        {
+          "file": "src/requests/status_codes.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1951-2010"
+        },
+        {
+          "file": "src/requests/structures.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "src/requests/utils.py",
+          "lines": "401-460"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 172,
+        "ttft_ms": 2733,
+        "total_ms": 2863
+      },
+      "error": null,
+      "id": "req-def-1",
+      "repo": "requests",
+      "kind": "definition",
+      "question": "Where is the case-insensitive dictionary that stores HTTP headers implemented?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "The connect\u2011 and read\u2011timeout exception classes that `requests.adapters` raises are defined in **`src/requests/exceptions.py`**:\n\n```py\nclass ConnectTimeout(ConnectionError):\n    \"\"\"Raised when a connection timed out during the request.\"\"\"\n\nclass ReadTimeout(ConnectTimeout):\n    \"\"\"Raised when a read operation timed out during the request.\"\"\"\n```\n\nThese classes wrap the underlying `urllib3` exceptions (`ConnectTimeoutError` and `ReadTimeoutError`) that are caught in `adapters.py` and re\u2011raised as `requests.exceptions.ConnectTimeout` and `requests.exceptions.ReadTimeout`.",
+      "sources": [
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "701-748"
+        },
+        {
+          "file": "tests/testserver/server.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1301-1360"
+        },
+        {
+          "file": "tests/test_testserver.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "151-210"
+        },
+        {
+          "file": "tests/test_testserver.py",
+          "lines": "151-165"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1901-1960"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 440,
+        "ttft_ms": 1137,
+        "total_ms": 1283
+      },
+      "error": null,
+      "id": "req-def-2",
+      "repo": "requests",
+      "kind": "definition",
+      "question": "Where are the exception classes for connect and read timeouts defined?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "The human\u2011readable names are defined in **`src/requests/status_codes.py`** inside the `_codes` dictionary.  \nEach numeric status code key maps to a tuple of the different names that can be accessed as attributes on the `codes` object. For example:\n\n- `200` maps to `(\"ok\", \"okay\", \"all_ok\", \"all_okay\", \"all_good\", \"\\\\o/\", \"\u2713\")` \u2013 accessed as `codes.ok`, `codes.OK`, etc.  \n- `404` maps to `(\"not_found\", \"-o-\")` \u2013 accessed as `codes.not_found`.\n\nThe `codes` object (a `LookupDict`) uses this mapping to provide attribute and key\u2011style access to the names.  \n\nSource: `src/requests/status_codes.py` lines 1\u201160.",
+      "sources": [
+        {
+          "file": "src/requests/status_codes.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "751-810"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1851-1910"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "801-860"
+        },
+        {
+          "file": "src/requests/__init__.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "851-910"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "901-960"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "851-910"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 103,
+        "ttft_ms": 899,
+        "total_ms": 1064
+      },
+      "error": null,
+      "id": "req-def-3",
+      "repo": "requests",
+      "kind": "definition",
+      "question": "Where are the human-readable names for HTTP status codes, like codes.ok or codes.not_found, defined?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "### High\u2011level flow\n\n1. **`requests.get()`**  \n   * Defined in `src/requests/api.py` (not shown in the snippets but part of the public API).  \n   * It is a thin wrapper that does:  \n     ```python\n     session = get_session()\n     return session.get(url, **kwargs)\n     ```  \n   * So the call is forwarded to a `Session` object.\n\n2. **`Session.get()`** (`src/requests/sessions.py`, lines 651\u2011710)  \n   ```python\n   def get(self, url, params=None, **kwargs):\n       kwargs.setdefault(\"allow_redirects\", True)\n       return self.request(\"GET\", url, params=params, **kwargs)\n   ```  \n   * It simply sets `allow_redirects` to `True` and delegates to `Session.request`.\n\n3. **`Session.request()`** (`src/requests/sessions.py`, earlier in the file \u2013 not shown but the standard implementation)  \n   * Builds a :class:`Request` object via `self.prepare_request(request)`.  \n   * Calls `self.send(prepped, **send_kwargs)` where `send_kwargs` contains timeout, proxies, etc.  \n   * `self.send()` is a convenience wrapper around the adapter\u2019s `send()`:\n     ```python\n     send_kwargs = {\n         \"stream\": stream,\n         \"timeout\": timeout,\n         \"verify\": verify,\n         \"cert\": cert,\n         \"proxies\": proxies,\n         \"allow_redirects\": allow_redirects,\n     }\n     return self.adapters[adapter_name].send(prepped, **send_kwargs)\n     ```\n   * The adapter name is chosen by `self.get_adapter(url)` (mount points).  \n     For a plain `http://` URL the default adapter is an instance of `HTTPAdapter` created by `Session.__init__` and mounted to `'http://'` and `'https://'`.\n\n4. **`HTTPAdapter.send()`** (`src/requests/adapters.py`, lines 601\u2011660 and surrounding context)  \n   ```python\n   def send(self, request: PreparedRequest, stream=False,\n            timeout=None, verify=True, cert=None,\n            proxies=None) -> Response:\n       assert _is_prepared(request)\n\n       # 1. Resolve proxies\n       proxies = proxies or {}\n       proxy = select_proxy(request.url, proxies, request.hooks.get('response'))\n\n       # 2. Create or reuse a PoolManager for the scheme/proxy\n       if proxy:\n           manager = self.proxy_manager.setdefault(\n               proxy, PoolManager(num_pools=self._pool_connections,\n                                 maxsize=self._pool_maxsize,\n                                 block=self._pool_block,\n                                 ssl_context=self._proxy_ssl_context))\n       else:\n           manager = self.poolmanager\n\n       # 3. Prepare urllib3 connection\n       #    - parse the URL\n       parsed = parse_url(request.url)\n       scheme = parsed.scheme\n       host = parsed.host\n       port = parsed.port\n       ...\n\n       # 4. Build request headers, adding authentication / proxy headers\n       request.headers.update(self.proxy_headers(proxy) if proxy else {})\n\n       # 5. Call urllib3 to actually send the request\n       http_response = manager.urlopen(\n           method=request.method,\n           url=parsed.url,\n           body=request.body,\n           headers=request.headers,\n           timeout=TimeoutSauce(timeout),\n           retries=self.max_retries,\n           redirect=False,\n           assert_same_host=False,\n           preload_content=not stream,\n           decode_content=decode_content\n       )\n\n       # 6. Wrap urllib3\u2019s response in a `requests.Response`\n       response = Response()\n       response.url = request.url\n       response.request = request\n       response._content = http_response.data\n       response.status_code = http_response.status\n       response.headers = CaseInsensitiveDict(http_response.headers)\n       ...\n       return response\n   ```\n\n   * The important part is the call to `manager.urlopen(...)`.  \n     `manager` is an instance of `urllib3.PoolManager` (or a proxy\u2011specific `PoolManager`), and `urlopen` is the urllib3 routine that actually establishes a socket, writes the HTTP request line + headers + body, and reads the reply.  \n   * That socket operation is the *network* step that transmits the request to the remote host.\n\n5. **`urllib3.PoolManager.urlopen()`**  \n   * Looks up or creates a connection pool for the `(scheme, host, port)` tuple.  \n   * Pulls a `urllib3.connectionpool.HTTPConnectionPool` (or HTTPS one).  \n   * Calls the pool\u2019s `urlopen()` which in turn calls `connection.make_request()` and `connection.send()` \u2013 these methods perform the raw socket write using Python\u2019s `socket` module (`socket.create_connection`, `socket.sendall`, `socket.recv` etc.).  \n   * Once the response headers and body are read, they are wrapped back into a `urllib3.response.HTTPResponse` object which is then handed back to the `HTTPAdapter`.\n\n6. **Back to `requests`**  \n   * The adapter constructs a `requests.Response` from the urllib3 response and returns it to `Session.request()`.  \n   * `Session.request()` handles redirects, streaming, and finally returns the `Response` to the caller (`requests.get()`).\n\n### Summary\n\n- `requests.get()` \u2192 `Session.get()` \u2192 `Session.request()` \u2192 `HTTPAdapter.send()` \u2192 `urllib3.PoolManager.urlopen()` \u2192 raw socket operations \u2192 `Response` returned to the caller.  \n- The *transport adapter* that actually does the network I/O is `HTTPAdapter`, which delegates to an `urllib3.PoolManager`. The low\u2011level socket handling happens inside `urllib3.connectionpool` classes. The adapter\u2019s `send()` method is the bridge that converts a `PreparedRequest` into the urllib3 call chain that performs the real network traffic.",
+      "sources": [
+        {
+          "file": "tests/test_adapters.py",
+          "lines": "1-8"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "601-660"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "lines": "651-710"
+        },
+        {
+          "file": "src/requests/__init__.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "151-210"
+        },
+        {
+          "file": "tests/test_lowlevel.py",
+          "lines": "151-210"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 118,
+        "ttft_ms": 618,
+        "total_ms": 1906
+      },
+      "error": null,
+      "id": "req-flow-1",
+      "repo": "requests",
+      "kind": "flow",
+      "question": "How does a call to requests.get() end up being sent over the network by the transport adapter?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "**Redirect flow**\n\n1. **Entry point** \u2013 When a response that has a redirect status (e.g., 301, 302, 303, 307, 308) is received, the `Session` object calls its `resolve_redirects()` method (see `src/requests/sessions.py` lines\u202f151\u2011210).  \n2. **Target resolution** \u2013 `resolve_redirects()` repeatedly calls `self.get_redirect_target(resp)` until there is no `Location` header or the maximum number of redirects is reached.  \n3. **Preparing the next request** \u2013  \n   * A copy of the original `PreparedRequest` (`req`) is made (`prepared_request = req.copy()`).\n   * The original response is appended to `resp.history` and `hist` is updated.\n   * The URL of the copy is set to the new redirect target.\n4. **Authorization header handling** \u2013 Before the next request is sent, `resolve_redirects()` checks whether the `Authorization` header should be removed by calling `self.should_strip_auth(old_url, new_url)` (see `src/requests/sessions.py` lines\u202f115\u2011134).  \n5. **Sending the request** \u2013 The new `PreparedRequest` (with or without the header) is yielded to the caller, which then passes it to the adapter\u2019s `send()` method.\n\n**When is the `Authorization` header dropped?**\n\n`should_strip_auth(old_url, new_url)` implements the logic that was added in the 0.4.0/0.4.1 releases (see `HISTORY.md` 0.4.0, 0.4.1). The header is stripped when any of the following is true:\n\n| Condition | Effect | Reference |\n|-----------|--------|-----------|\n| **Different host** (`old_parsed.hostname != new_parsed.hostname`) | Strip header | `should_strip_auth` line\u202f121 |\n| **HTTP \u2192 HTTPS on the same standard port** (`old_scheme == http`, `old_port in (80, None)`, `new_scheme == https`, `new_port in (443, None)`) | *Do not* strip (special case) | lines\u202f124\u2011129 |\n| **Port change** (`old_parsed.port != new_parsed.port`) | Strip header | lines\u202f140\u2011146 |\n| **Scheme change** (`old_parsed.scheme != new_parsed.scheme`) | Strip header | same block |\n| **Both URLs use the default port for their scheme and the scheme didn\u2019t change** | *Do not* strip | lines\u202f138\u2011140 |\n| **All other cases** (e.g., same host, same scheme, same port) | Do not strip | default return at line\u202f147 |\n\nIn short, the `Authorization` header is removed on redirects that **cross hosts** or **change port or scheme** (except the special http\u2192https on standard ports). This behaviour was introduced to comply with RFC\u202f7235 and to prevent accidental leakage of credentials across domains (see `HISTORY.md` entries 0.4.0, 0.4.1, 2.3.0).",
+      "sources": [
+        {
+          "file": "HISTORY.md",
+          "lines": "2001-2060"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "lines": "151-210"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "2301-2360"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1951-2010"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "201-260"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1301-1360"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "301-360"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1201-1260"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 168,
+        "ttft_ms": 997,
+        "total_ms": 1722
+      },
+      "error": null,
+      "id": "req-flow-2",
+      "repo": "requests",
+      "kind": "flow",
+      "question": "How are redirects followed, and when is the Authorization header dropped during a redirect?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "When the client receives a **401\u202fUNAUTHORIZED** that contains a *Digest* challenge, the\n`requests` library does the following:\n\n1. **Initial request** \u2013 The request is sent without any `Authorization`\n   header.  \n   The `Session.send()` method receives the first `Response` object.\n\n2. **Detect a 401 and the presence of an Auth object** \u2013  \n   In `Session.send()` (see the code around the end of the method in\n   *src/requests/sessions.py*), after the response is returned to the caller,\n   the library checks:\n\n   ```python\n   if (\n       r.status_code == 401\n       and r.request and r.request.auth\n       and isinstance(r.request.auth, AuthBase)\n   ):\n       r = self.send(r.request, **kwargs)\n   ```\n\n   This is the retry hook.  It calls `send()` again, but this time **with the\n   authentication handler applied**.\n\n3. **Auth handler runs** \u2013  \n   The `HTTPDigestAuth` object implements the `__call__` method (in\n   *src/requests/auth.py*).  When `send()` is called a second time, the\n   prepared request is passed to the handler:\n\n   ```python\n   prepared_request = self.prepare_request(request)\n   prepared_request = auth(prepared_request, r)   # auth is HTTPDigestAuth\n   ```\n\n   Inside `HTTPDigestAuth.__call__`:\n\n   - The challenge from the *WWW\u2011Authenticate* header of the 401 response\n     is parsed (`parse_dict_header`).\n   - The handler calculates the response value for the digest using the\n     username, password, nonce, qop, etc.\n   - It builds an `Authorization: Digest \u2026` header and adds it to\n     `prepared_request.headers`.\n\n   The handler also stores the challenge state (`nonce`, `realm`, `qop`,\n   `nonceCount`, `cnonce`, etc.) in its internal dictionary so that the\n   next request will reuse the same values.\n\n4. **Retry the request** \u2013  \n   After the auth handler has added the header, `Session.send()` is\n   invoked again with this modified `PreparedRequest`.  Because the\n   request now contains the correct `Authorization` header, the server\n   authenticates the client and returns a 200 (or whatever the final\n   status is).  The retry is performed **only once**; if the server\n   replies with another 401, the `HTTPDigestAuth` object will notice\n   that the nonce has changed or that the request has already been\n   retried and will stop adding the header (this logic lives in the\n   `__call__` method and the `is_authenticated` flag).\n\nSo, in short:\n\n```\n1. Send GET without Authorization \u2192 401 with Digest challenge\n2. Session.send() sees 401 + auth \u2192 calls auth()\n3. HTTPDigestAuth parses challenge, builds Authorization header,\n   stores state, returns modified PreparedRequest\n4. Session.send() retries with that request \u2192 server accepts \u2192 200\n```\n\nThe retry is built into the `Session.send()` flow and uses the\n`AuthBase` interface that `HTTPDigestAuth` implements.  The code in\n`requests/auth.py` that performs the header generation is what ties the\nchallenge to the retry.",
+      "sources": [
+        {
+          "file": "tests/test_requests.py",
+          "lines": "751-810"
+        },
+        {
+          "file": "tests/test_lowlevel.py",
+          "lines": "201-260"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "lines": "301-360"
+        },
+        {
+          "file": "tests/test_lowlevel.py",
+          "lines": "151-210"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "801-860"
+        },
+        {
+          "file": "tests/test_lowlevel.py",
+          "lines": "251-310"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "2051-2102"
+        },
+        {
+          "file": "src/requests/auth.py",
+          "lines": "1-60"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 129,
+        "ttft_ms": 1145,
+        "total_ms": 1926
+      },
+      "error": null,
+      "id": "req-flow-3",
+      "repo": "requests",
+      "kind": "flow",
+      "question": "How does HTTP Digest authentication retry the request after the server responds with a 401 challenge?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "The default maximum number of redirects a `requests.Session` will follow is **30**.  \nIt is defined in the `Session` class (in `src/requests/sessions.py`) as the default value of the `max_redirects` attribute, which is set when the session object is created:\n\n```py\nclass Session(object):\n    def __init__(self):\n        ...\n        self.max_redirects = 30          # default redirect limit\n        ...\n```\n\nThis default is used in the redirect\u2011handling logic shown in the same file, where the session checks `len(resp.history) >= self.max_redirects` and raises a `TooManyRedirects` exception if the limit is exceeded.",
+      "sources": [
+        {
+          "file": "HISTORY.md",
+          "lines": "1951-2010"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "251-310"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "lines": "201-260"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "2001-2060"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "2301-2360"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "2601-2660"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1301-1360"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "701-760"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 151,
+        "ttft_ms": 863,
+        "total_ms": 994
+      },
+      "error": null,
+      "id": "req-cfg-1",
+      "repo": "requests",
+      "kind": "config",
+      "question": "What is the default maximum number of redirects a session will follow, and where is it set?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "The CA\u2011bundle used when `verify=True` is chosen from the following environment variables (in order of precedence):\n\n| Variable | Effect |\n|----------|--------|\n| `REQUESTS_CA_BUNDLE` | Path to a custom CA bundle that **Requests** will use. |\n| `CURL_CA_BUNDLE` | Fallback path used by Requests if `REQUESTS_CA_BUNDLE` is not set. |\n\nIf neither variable is set, Requests falls back to the default bundle provided by the `certifi` package (`certifi.where()` as seen in `src/requests/certs.py`). These variables are inspected by `Session.merge_environment_settings()` (see the test `test_env_cert_bundles` in `tests/test_requests.py`), which sets the `verify` field of the request settings to the value of `REQUESTS_CA_BUNDLE` if present, otherwise to `CURL_CA_BUNDLE` if that is set, and otherwise leaves it as the default `True` (causing Requests to use `certifi`).",
+      "sources": [
+        {
+          "file": "src/requests/certs.py",
+          "lines": "1-18"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "1001-1060"
+        },
+        {
+          "file": "src/requests/sessions.py",
+          "lines": "601-660"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "451-510"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "651-710"
+        },
+        {
+          "file": "src/requests/api.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "151-210"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "301-360"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 455,
+        "ttft_ms": 969,
+        "total_ms": 1200
+      },
+      "error": null,
+      "id": "req-cfg-2",
+      "repo": "requests",
+      "kind": "config",
+      "question": "Which environment variables control the CA certificate bundle used for TLS verification?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "The `HTTPAdapter` takes its defaults from the constants `DEFAULT_POOLSIZE` and `DEFAULT_RETRIES` that are defined at the top of `requests/adapters.py`.\n\n- **Default pool size** \u2013 `DEFAULT_POOLSIZE` is set to **10**.  \n- **Default retry count** \u2013 `DEFAULT_RETRIES` is set to **0** (i.e., no automatic retries).\n\nThese values are used in the constructor of `HTTPAdapter` to initialise the adapter:\n\n```py\ndef __init__(self, pool_connections=DEFAULT_POOLSIZE,\n                 pool_maxsize=DEFAULT_POOLSIZE,\n                 max_retries=DEFAULT_RETRIES,\n                 pool_block=DEFAULT_POOLBLOCK) -> None:\n    if max_retries == DEFAULT_RETRIES:\n        self.max_retries = Retry(0, read=False)   # no retries\n    else:\n        self.max_retries = Retry.from_int(max_retries)\n    \u2026\n    self.init_poolmanager(pool_connections, pool_maxsize, block=pool_block)\n```\n\nSo the adapter uses a connection\u2011pool cache of 10 connections per host and performs no retries by default.",
+      "sources": [
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "151-210"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "251-310"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "201-260"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "501-560"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "451-510"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "701-748"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1301-1360"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 146,
+        "ttft_ms": 863,
+        "total_ms": 1085
+      },
+      "error": null,
+      "id": "req-cfg-3",
+      "repo": "requests",
+      "kind": "config",
+      "question": "What are the default connection pool size and retry count for the HTTP adapter?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "`Session.should_strip_auth(old_url, new_url)` decides whether the `Authorization` header should be removed when following a redirect.  \nIt performs the following checks (in order):\n\n| Step | What it checks | Result | Why |\n|------|----------------|--------|-----|\n| 1 | **Different hostnames** (`old_parsed.hostname != new_parsed.hostname`) | **True** | The auth header must be dropped when moving to a different host. |\n| 2 | **HTTP \u2192 HTTPS on the same standard port** (`http` with port 80 or default, `https` with port 443 or default) | **False** | RFC\u202f7235 doesn\u2019t require this, but older requests versions allowed it to keep backward compatibility. |\n| 3 | **Change of default port for the same scheme** (`old_port` and `new_port` are the scheme\u2019s default ports and the scheme hasn\u2019t changed) | **False** | Switching between the default port notation (`http://example.com` vs `http://example.com:80`) shouldn\u2019t strip auth. |\n| 4 | **Any other scheme or port change** (`changed_scheme or changed_port`) | **True** | Any other redirect (e.g., different scheme, non\u2011standard port, or different host) triggers stripping. |\n\nSo `should_strip_auth` returns `True` when the redirect is to a different host or when the scheme/port changes in a way that is not covered by the special cases above; otherwise it returns `False`. This logic is exercised in the tests in `tests/test_requests.py` where redirects between `http`/`https`, standard/non\u2011standard ports, and host changes are verified.",
+      "sources": [
+        {
+          "file": "src/requests/sessions.py",
+          "lines": "151-210"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "1951-2010"
+        },
+        {
+          "file": "src/requests/auth.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "751-810"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "701-760"
+        },
+        {
+          "file": "src/requests/auth.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "2051-2102"
+        },
+        {
+          "file": "tests/test_utils.py",
+          "lines": "151-210"
+        }
+      ],
+      "timings": {
+        "retrieval_ms": 118,
+        "ttft_ms": 762,
+        "total_ms": 1181
+      },
+      "error": null,
+      "id": "req-id-1",
+      "repo": "requests",
+      "kind": "identifier",
+      "question": "What does should_strip_auth check?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "",
+      "sources": [
+        {
+          "file": "src/requests/models.py",
+          "lines": "951-1010"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "901-960"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "1501-1560"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "1001-1060"
+        },
+        {
+          "file": "src/requests/utils.py",
+          "lines": "601-660"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "651-710"
+        },
+        {
+          "file": "HISTORY.md",
+          "lines": "1001-1060"
+        }
+      ],
+      "timings": null,
+      "error": "RateLimitError: Error code: 429 - Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kt87hn37fz0akb10rwz84zjg` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 197459, Requested 4221. Please try again in 12m5.76s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+      "id": "req-id-2",
+      "repo": "requests",
+      "kind": "identifier",
+      "question": "What is ITER_CHUNK_SIZE and which method uses it?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "",
+      "sources": [
+        {
+          "file": "src/requests/hooks.py",
+          "lines": "1-48"
+        },
+        {
+          "file": "tests/test_hooks.py",
+          "lines": "1-22"
+        },
+        {
+          "file": "src/requests/adapters.py",
+          "lines": "601-660"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "251-310"
+        },
+        {
+          "file": "src/requests/api.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "src/requests/models.py",
+          "lines": "301-360"
+        },
+        {
+          "file": "tests/test_requests.py",
+          "lines": "1201-1260"
+        },
+        {
+          "file": "src/requests/api.py",
+          "lines": "101-160"
+        }
+      ],
+      "timings": null,
+      "error": "RateLimitError: Error code: 429 - Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kt87hn37fz0akb10rwz84zjg` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 197377, Requested 4434. Please try again in 13m2.352s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+      "id": "req-id-3",
+      "repo": "requests",
+      "kind": "identifier",
+      "question": "What does dispatch_hook do?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "",
+      "sources": [
+        {
+          "file": "frontend/src/components/ChatPanel.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/src/components/ChatPanel.jsx",
+          "lines": "201-260"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/llm_client.py",
+          "lines": "1-53"
+        },
+        {
+          "file": "backend/agent.py",
+          "lines": "51-80"
+        },
+        {
+          "file": "frontend/src/components/MessageBubble.jsx",
+          "lines": "251-310"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "151-178"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "51-110"
+        }
+      ],
+      "timings": null,
+      "error": "RateLimitError: Error code: 429 - Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kt87hn37fz0akb10rwz84zjg` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 197295, Requested 4083. Please try again in 9m55.296s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+      "id": "cqa-def-1",
+      "repo": "codebase-qa-agent",
+      "kind": "definition",
+      "question": "Where is the HTTP endpoint that answers chat questions defined?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "",
+      "sources": [
+        {
+          "file": "frontend/src/App.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "151-178"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "backend/agent.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/src/components/IndexPanel.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "render.yaml",
+          "lines": "1-23"
+        },
+        {
+          "file": "frontend/src/components/RepoSummaryCard.jsx",
+          "lines": "251-310"
+        }
+      ],
+      "timings": null,
+      "error": "RateLimitError: Error code: 429 - Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kt87hn37fz0akb10rwz84zjg` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 197213, Requested 4381. Please try again in 11m28.608s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+      "id": "cqa-def-2",
+      "repo": "codebase-qa-agent",
+      "kind": "definition",
+      "question": "Which frontend component shows how long indexing took on the repo summary card?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "",
+      "sources": [
+        {
+          "file": "backend/summarizer.py",
+          "lines": "101-148"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/agent.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/summarizer.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/vercel.json",
+          "lines": "1-5"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "251-310"
+        },
+        {
+          "file": "docker-compose.yml",
+          "lines": "1-18"
+        },
+        {
+          "file": "frontend/package.json",
+          "lines": "1-19"
+        }
+      ],
+      "timings": null,
+      "error": "RateLimitError: Error code: 429 - Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kt87hn37fz0akb10rwz84zjg` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 197131, Requested 3285. Please try again in 2m59.712s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+      "id": "cqa-def-3",
+      "repo": "codebase-qa-agent",
+      "kind": "definition",
+      "question": "Where is the system prompt that tells the model to cite files defined?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "",
+      "sources": [
+        {
+          "file": "backend/indexer.py",
+          "lines": "201-260"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "frontend/src/components/IndexPanel.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "151-178"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "frontend/src/App.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/summarizer.py",
+          "lines": "101-148"
+        },
+        {
+          "file": "docker-compose.yml",
+          "lines": "1-18"
+        }
+      ],
+      "timings": null,
+      "error": "RateLimitError: Error code: 429 - Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kt87hn37fz0akb10rwz84zjg` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 197050, Requested 4319. Please try again in 9m51.408s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+      "id": "cqa-flow-1",
+      "repo": "codebase-qa-agent",
+      "kind": "flow",
+      "question": "How does indexing run the repo summary at the same time as embedding?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "",
+      "sources": [
+        {
+          "file": "frontend/src/components/ChatPanel.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/agent.py",
+          "lines": "51-80"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "151-178"
+        },
+        {
+          "file": "frontend/src/components/MessageBubble.jsx",
+          "lines": "51-110"
+        },
+        {
+          "file": "frontend/src/components/ChatPanel.jsx",
+          "lines": "51-110"
+        },
+        {
+          "file": "frontend/src/components/IndexPanel.jsx",
+          "lines": "51-110"
+        },
+        {
+          "file": "backend/agent.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/src/components/ChatPanel.jsx",
+          "lines": "201-260"
+        }
+      ],
+      "timings": null,
+      "error": "RateLimitError: Error code: 429 - Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kt87hn37fz0akb10rwz84zjg` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 196968, Requested 4566. Please try again in 11m2.688s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+      "id": "cqa-flow-2",
+      "repo": "codebase-qa-agent",
+      "kind": "flow",
+      "question": "How is a chat answer streamed from the server to the browser, from retrieval to the final [DONE] event?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "",
+      "sources": [
+        {
+          "file": "backend/indexer.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "201-260"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "151-178"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "docker-compose.yml",
+          "lines": "1-18"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "frontend/src/App.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/agent.py",
+          "lines": "1-60"
+        }
+      ],
+      "timings": null,
+      "error": "RateLimitError: Error code: 429 - Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kt87hn37fz0akb10rwz84zjg` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 196886, Requested 4410. Please try again in 9m19.872s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+      "id": "cqa-flow-3",
+      "repo": "codebase-qa-agent",
+      "kind": "flow",
+      "question": "How does the server get back the repos it had already indexed after it restarts?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "",
+      "sources": [
+        {
+          "file": "docker-compose.yml",
+          "lines": "1-18"
+        },
+        {
+          "file": "backend/llm_client.py",
+          "lines": "1-53"
+        },
+        {
+          "file": "frontend/vite.config.js",
+          "lines": "1-9"
+        },
+        {
+          "file": "render.yaml",
+          "lines": "1-23"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "frontend/package.json",
+          "lines": "1-19"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "151-178"
+        }
+      ],
+      "timings": null,
+      "error": "RateLimitError: Error code: 429 - Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kt87hn37fz0akb10rwz84zjg` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 196804, Requested 3709. Please try again in 3m41.616s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+      "id": "cqa-cfg-1",
+      "repo": "codebase-qa-agent",
+      "kind": "config",
+      "question": "Which environment variable chooses between the local and the hosted LLM provider?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "",
+      "sources": [
+        {
+          "file": "docker-compose.yml",
+          "lines": "1-18"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "render.yaml",
+          "lines": "1-23"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "201-260"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/vite.config.js",
+          "lines": "1-9"
+        },
+        {
+          "file": "frontend/package.json",
+          "lines": "1-19"
+        },
+        {
+          "file": "frontend/vercel.json",
+          "lines": "1-5"
+        }
+      ],
+      "timings": null,
+      "error": "RateLimitError: Error code: 429 - Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kt87hn37fz0akb10rwz84zjg` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 196722, Requested 3659. Please try again in 2m44.592s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+      "id": "cqa-cfg-2",
+      "repo": "codebase-qa-agent",
+      "kind": "config",
+      "question": "Where is the directory that ChromaDB saves the index to configured, both in code and in Docker?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "",
+      "sources": [
+        {
+          "file": "docker-compose.yml",
+          "lines": "1-18"
+        },
+        {
+          "file": "frontend/src/components/IndexPanel.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "render.yaml",
+          "lines": "1-23"
+        },
+        {
+          "file": "frontend/package.json",
+          "lines": "1-19"
+        },
+        {
+          "file": "frontend/src/components/ChatPanel.jsx",
+          "lines": "251-310"
+        },
+        {
+          "file": "frontend/src/App.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/src/components/RepoSummaryCard.jsx",
+          "lines": "251-310"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "101-160"
+        }
+      ],
+      "timings": null,
+      "error": "RateLimitError: Error code: 429 - Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kt87hn37fz0akb10rwz84zjg` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 196640, Requested 4245. Please try again in 6m22.32s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+      "id": "cqa-cfg-3",
+      "repo": "codebase-qa-agent",
+      "kind": "config",
+      "question": "How is the backend configured for deployment on Render, and is the reranker turned on there?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "",
+      "sources": [
+        {
+          "file": "backend/llm_client.py",
+          "lines": "1-53"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "backend/agent.py",
+          "lines": "51-80"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "151-178"
+        },
+        {
+          "file": "frontend/src/lib/api.js",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/src/components/RepoSummaryCard.jsx",
+          "lines": "351-400"
+        },
+        {
+          "file": "docker-compose.yml",
+          "lines": "1-18"
+        }
+      ],
+      "timings": null,
+      "error": "RateLimitError: Error code: 429 - Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kt87hn37fz0akb10rwz84zjg` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 196558, Requested 4455. Please try again in 7m17.616s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+      "id": "cqa-id-1",
+      "repo": "codebase-qa-agent",
+      "kind": "identifier",
+      "question": "What does get_request_options return, and for which provider?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "",
+      "sources": [
+        {
+          "file": "frontend/src/components/RepoSummaryCard.jsx",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/src/components/MessageBubble.jsx",
+          "lines": "351-391"
+        },
+        {
+          "file": "frontend/src/components/RepoSummaryCard.jsx",
+          "lines": "201-260"
+        },
+        {
+          "file": "backend/summarizer.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "backend/requirements.txt",
+          "lines": "1-5"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "301-315"
+        },
+        {
+          "file": "backend/agent.py",
+          "lines": "1-60"
+        },
+        {
+          "file": "frontend/src/components/ChatPanel.jsx",
+          "lines": "351-410"
+        }
+      ],
+      "timings": null,
+      "error": "RateLimitError: Error code: 429 - Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kt87hn37fz0akb10rwz84zjg` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 196477, Requested 4662. Please try again in 8m12.048s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+      "id": "cqa-id-2",
+      "repo": "codebase-qa-agent",
+      "kind": "identifier",
+      "question": "What thresholds does _complexity_label use?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    },
+    {
+      "answer": "",
+      "sources": [
+        {
+          "file": "backend/indexer.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "151-210"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "201-260"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "render.yaml",
+          "lines": "1-23"
+        },
+        {
+          "file": "backend/indexer.py",
+          "lines": "101-160"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "51-110"
+        },
+        {
+          "file": "backend/main.py",
+          "lines": "151-178"
+        }
+      ],
+      "timings": null,
+      "error": "RateLimitError: Error code: 429 - Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kt87hn37fz0akb10rwz84zjg` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 196395, Requested 4922. Please try again in 9m28.944s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+      "id": "cqa-id-3",
+      "repo": "codebase-qa-agent",
+      "kind": "identifier",
+      "question": "What is MAX_REPO_SIZE_MB and where is it enforced?",
+      "citations": {
+        "score": 0.0,
+        "reason": "No [file:lines] citations in the answer, so nothing could be verified.",
+        "total": 0,
+        "valid": 0,
+        "citations": []
+      }
+    }
+  ]
+}
