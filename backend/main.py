@@ -1,23 +1,42 @@
-import os
+import logging
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 
-import agent
-import summarizer
-from indexer import RepoIndexer
-
+# Load .env before importing modules that read env vars at import time.
 load_dotenv()
 
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama")
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+from fastapi import FastAPI, HTTPException  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from fastapi.responses import StreamingResponse  # noqa: E402
+from pydantic import BaseModel  # noqa: E402
 
-app = FastAPI(title="RepoSage")
+import agent  # noqa: E402
+import indexer as indexer_module  # noqa: E402
+import summarizer  # noqa: E402
+from indexer import RepoIndexer  # noqa: E402
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# repo_url -> {"indexer": RepoIndexer, "stats": dict, "summary": dict}
+_indexed_repos: dict[str, dict] = {}
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Load the embedding model once, before serving traffic, and reload any
+    # repos indexed before the last restart.
+    indexer_module.warm_up()
+    for repo in indexer_module.load_persisted_repos():
+        _indexed_repos[repo["repo_url"]] = repo
+    logger.info("Startup complete: %d repo(s) restored from disk", len(_indexed_repos))
+    yield
+
+
+app = FastAPI(title="RepoSage", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,9 +45,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# repo_url -> {"indexer": RepoIndexer, "stats": dict}
-_indexed_repos: dict[str, dict] = {}
 
 
 class IndexRequest(BaseModel):
@@ -46,35 +62,49 @@ async def health():
     return {"status": "ok"}
 
 
+# Plain `def` on purpose: cloning, embedding and the summary LLM call are all
+# blocking. FastAPI runs sync endpoints in a worker thread, so other requests
+# (/health, /chat for another repo) keep being served while this one runs.
 @app.post("/index")
-async def index_repo(body: IndexRequest):
+def index_repo(body: IndexRequest):
     repo_url = body.repo_url.strip()
 
     # Clean up any previously indexed version of the same repo
     if repo_url in _indexed_repos:
-        _indexed_repos[repo_url]["indexer"].cleanup()
-        del _indexed_repos[repo_url]
+        _indexed_repos.pop(repo_url)["indexer"].delete()
 
-    indexer = RepoIndexer()
+    indexer = RepoIndexer(repo_url)
     try:
-        stats = indexer.index_repo(repo_url)
+        stats = indexer.clone_and_chunk()
+
+        # The summary only needs the README, file listing and entry points,
+        # not the embeddings, so run the LLM call while we embed.
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            summary_future = pool.submit(
+                summarizer.generate_repo_summary, indexer, indexer.repo_dir, repo_url
+            )
+            indexer.build_index()
+            summary = summary_future.result()
+
+        indexer.save_metadata(stats, summary)
     except subprocess.CalledProcessError:
-        indexer.cleanup()
+        indexer.delete()
         raise HTTPException(
             status_code=400,
             detail=f"Failed to clone repository. Check that the URL is correct and the repo is public: {repo_url}",
         )
     except subprocess.TimeoutExpired:
-        indexer.cleanup()
+        indexer.delete()
         raise HTTPException(
             status_code=400,
             detail="Clone timed out after 5 minutes. The repository may be too large or unreachable.",
         )
     except Exception as exc:
-        indexer.cleanup()
+        indexer.delete()
         raise HTTPException(status_code=400, detail=str(exc))
 
-    summary = summarizer.generate_repo_summary(indexer, indexer.repo_dir, repo_url)
+    # The cloned files aren't needed for chat; everything is in ChromaDB now.
+    indexer.remove_clone()
     _indexed_repos[repo_url] = {"indexer": indexer, "stats": stats, "summary": summary}
 
     return {
@@ -99,6 +129,8 @@ async def chat(body: ChatRequest):
 
     indexer = _indexed_repos[repo_url]["indexer"]
 
+    # stream_answer is a sync generator; Starlette iterates it in a worker
+    # thread, so the blocking retrieval + LLM stream don't block the event loop.
     return StreamingResponse(
         agent.stream_answer(indexer, body.question, body.history),
         media_type="text/event-stream",

@@ -47,6 +47,7 @@ def stream_answer(
         messages=messages,
         max_tokens=MAX_TOKENS,
         stream=True,
+        **llm_client.get_request_options(),
     )
 
     for chunk in stream:

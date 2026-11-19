@@ -27,3 +27,7 @@ frontend/.env
 frontend/.env.*
 !frontend/.env.example
 frontend/package-lock.json
+
+# Local ChromaDB data
+backend/chroma_data/
+chroma_data/

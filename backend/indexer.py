@@ -1,14 +1,18 @@
+import hashlib
+import json
+import logging
 import os
 import re
 import shutil
 import subprocess
 import tempfile
-import uuid
 import urllib.request
-import json
 
 import chromadb
+from chromadb.config import Settings
 from chromadb.utils import embedding_functions
+
+logger = logging.getLogger(__name__)
 
 SUPPORTED_EXTENSIONS = {
     ".py", ".js", ".ts", ".tsx", ".jsx",
@@ -31,7 +35,13 @@ UPSERT_BATCH_SIZE = 100
 MAX_REPO_SIZE_MB = 200
 CLONE_TIMEOUT_SECONDS = 300
 
+# Where ChromaDB stores its data on disk. Indexed repos survive restarts as
+# long as this directory survives (a Docker volume locally; note that Render's
+# free tier has no persistent disk, so there it lasts until the next deploy).
+CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "./chroma_data")
+
 _embed_fn = None
+_chroma_client = None
 
 
 def _check_github_repo_size(url: str) -> None:
@@ -65,21 +75,85 @@ def _get_embed_fn():
     return _embed_fn
 
 
+def _get_chroma_client():
+    global _chroma_client
+    if _chroma_client is None:
+        _chroma_client = chromadb.PersistentClient(
+            path=CHROMA_PERSIST_DIR,
+            # Don't send usage telemetry from a demo server.
+            settings=Settings(anonymized_telemetry=False),
+        )
+    return _chroma_client
+
+
+def _collection_name(repo_url: str) -> str:
+    # Deterministic, so re-indexing a repo replaces its collection and a
+    # restarted server can find it again.
+    return "repo_" + hashlib.sha1(repo_url.encode()).hexdigest()[:16]
+
+
+def warm_up() -> None:
+    """Load the embedding model and run it once.
+
+    Called at app startup so the first /index request doesn't pay for loading
+    the ONNX model. The model files themselves are downloaded at Docker build
+    time (see Dockerfile), so this only reads them from local disk.
+    """
+    _get_embed_fn()(["warm up"])
+    _get_chroma_client()
+
+
+def load_persisted_repos() -> list[dict]:
+    """Return every fully indexed repo found in the on-disk ChromaDB store.
+
+    Each item: {"repo_url", "indexer", "stats", "summary"}. Collections from an
+    indexing run that never finished (no "ready" flag) are deleted.
+    """
+    client = _get_chroma_client()
+    repos = []
+    for col in client.list_collections():
+        meta = col.metadata or {}
+        if not meta.get("ready"):
+            logger.info("Deleting incomplete collection %s", col.name)
+            client.delete_collection(col.name)
+            continue
+
+        indexer = RepoIndexer(meta["repo_url"])
+        indexer._collection = client.get_collection(
+            name=col.name, embedding_function=_get_embed_fn()
+        )
+        repos.append({
+            "repo_url": meta["repo_url"],
+            "indexer": indexer,
+            "stats": json.loads(meta["stats"]),
+            "summary": json.loads(meta["summary"]),
+        })
+    return repos
+
+
 class RepoIndexer:
-    def __init__(self):
+    """Indexes one repository into its own ChromaDB collection.
+
+    Indexing is split into steps so main.py can run the summary LLM call in
+    parallel with embedding:
+        clone_and_chunk() -> build_index() -> save_metadata() -> remove_clone()
+    """
+
+    def __init__(self, repo_url: str):
+        self.repo_url = repo_url
         self.repo_dir: str | None = None
         self.chunks: list[dict] = []
         self._temp_dir: str | None = None
         self._collection = None
 
-    def index_repo(self, url: str) -> dict:
-        _check_github_repo_size(url)
+    def clone_and_chunk(self) -> dict:
+        _check_github_repo_size(self.repo_url)
 
         self._temp_dir = tempfile.mkdtemp()
         self.repo_dir = os.path.join(self._temp_dir, "repo")
 
         subprocess.run(
-            ["git", "clone", "--depth=1", url, self.repo_dir],
+            ["git", "clone", "--depth=1", self.repo_url, self.repo_dir],
             check=True,
             timeout=CLONE_TIMEOUT_SECONDS,
             stdout=subprocess.DEVNULL,
@@ -111,13 +185,52 @@ class RepoIndexer:
                 chunks.extend(self._chunk_lines(lines, rel_path, language))
 
         self.chunks = chunks
-        self._build_collection(chunks)
 
         return {
             "files": self._count_unique_files(chunks),
             "chunks": len(chunks),
             "languages": sorted(languages_seen),
         }
+
+    def build_index(self) -> None:
+        """Embed all chunks into this repo's collection, replacing any old one."""
+        client = _get_chroma_client()
+        name = _collection_name(self.repo_url)
+        try:
+            client.delete_collection(name)
+        except Exception:
+            pass  # didn't exist
+
+        # "ready" stays False until save_metadata() runs, so a crash mid-index
+        # leaves a collection that load_persisted_repos() will discard.
+        self._collection = client.create_collection(
+            name=name,
+            embedding_function=_get_embed_fn(),
+            metadata={"repo_url": self.repo_url, "ready": False},
+        )
+
+        for batch_start in range(0, len(self.chunks), UPSERT_BATCH_SIZE):
+            batch = self.chunks[batch_start: batch_start + UPSERT_BATCH_SIZE]
+            self._collection.upsert(
+                ids=[f"{c['file']}::{c['lines']}" for c in batch],
+                documents=[c["content"] for c in batch],
+                metadatas=[
+                    {"file": c["file"], "lines": c["lines"], "language": c["language"]}
+                    for c in batch
+                ],
+            )
+
+    def save_metadata(self, stats: dict, summary: dict) -> None:
+        """Store stats + summary on the collection and mark it complete.
+
+        ChromaDB metadata values must be scalars, so dicts are stored as JSON.
+        """
+        self._collection.modify(metadata={
+            "repo_url": self.repo_url,
+            "ready": True,
+            "stats": json.dumps(stats),
+            "summary": json.dumps(summary),
+        })
 
     def query(self, question: str, n_results: int = 8) -> list[dict]:
         if self._collection is None:
@@ -145,35 +258,26 @@ class RepoIndexer:
             })
         return hits
 
-    def cleanup(self) -> None:
-        self._collection = None
+    def remove_clone(self) -> None:
+        """Delete the cloned files. Everything needed for chat is in ChromaDB."""
         if self._temp_dir and os.path.exists(self._temp_dir):
             shutil.rmtree(self._temp_dir, ignore_errors=True)
         self._temp_dir = None
         self.repo_dir = None
+        self.chunks = []
+
+    def delete(self) -> None:
+        """Remove the clone and this repo's collection."""
+        self.remove_clone()
+        try:
+            _get_chroma_client().delete_collection(_collection_name(self.repo_url))
+        except Exception:
+            pass
+        self._collection = None
 
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
-
-    def _build_collection(self, chunks: list[dict]) -> None:
-        client = chromadb.Client()
-        collection_name = f"repo_{uuid.uuid4().hex}"
-        self._collection = client.create_collection(
-            name=collection_name,
-            embedding_function=_get_embed_fn(),
-        )
-
-        for batch_start in range(0, len(chunks), UPSERT_BATCH_SIZE):
-            batch = chunks[batch_start: batch_start + UPSERT_BATCH_SIZE]
-            self._collection.upsert(
-                ids=[f"{c['file']}::{c['lines']}" for c in batch],
-                documents=[c["content"] for c in batch],
-                metadatas=[
-                    {"file": c["file"], "lines": c["lines"], "language": c["language"]}
-                    for c in batch
-                ],
-            )
 
     def _chunk_lines(self, lines: list[str], file: str, language: str) -> list[dict]:
         chunks = []

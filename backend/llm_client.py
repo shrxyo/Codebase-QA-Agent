@@ -34,5 +34,20 @@ def get_llm_client() -> OpenAI:
 def get_model_name() -> str:
     provider = os.getenv("LLM_PROVIDER", "ollama")
     if provider == "groq":
-        return "llama-3.1-8b-instant"
+        # Groq retired llama-3.1-8b-instant for free/dev tiers on 2026-08-16;
+        # gpt-oss-20b is their recommended replacement.
+        return "openai/gpt-oss-20b"
     return "llama3.1:8b"
+
+
+def get_request_options() -> dict:
+    """Provider-specific kwargs to pass to chat.completions.create().
+
+    gpt-oss is a reasoning model: it writes hidden "thinking" tokens before the
+    answer, and those count against max_tokens and delay the first visible
+    token. Low effort is enough for summaries and code Q&A over retrieved
+    context, and keeps latency down.
+    """
+    if os.getenv("LLM_PROVIDER", "ollama") == "groq":
+        return {"reasoning_effort": "low"}
+    return {}

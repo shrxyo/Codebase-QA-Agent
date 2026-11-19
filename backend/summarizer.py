@@ -130,8 +130,10 @@ def generate_repo_summary(
                 {"role": "system", "content": _SYSTEM_PROMPT},
                 {"role": "user", "content": user_message},
             ],
-            max_tokens=600,
+            # Headroom for the model's reasoning tokens plus the ~300-token JSON.
+            max_tokens=1500,
             temperature=0.2,
+            **llm_client.get_request_options(),
         )
         raw = response.choices[0].message.content or ""
         summary = json.loads(raw.strip())

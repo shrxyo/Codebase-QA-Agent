@@ -7,5 +7,12 @@ services:
       - "8000:8000"
     env_file:
       - ./backend/.env
+    environment:
+      # Overrides any value in .env so the index lands in the named volume
+      CHROMA_PERSIST_DIR: /data/chroma
     volumes:
       - ./backend:/app
+      - chroma_data:/data/chroma
+
+volumes:
+  chroma_data:
