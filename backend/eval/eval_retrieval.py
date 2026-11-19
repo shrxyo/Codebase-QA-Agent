@@ -13,6 +13,7 @@ top 8 chunks; a chunk is relevant if its file is one of the expected files):
 
 Usage (from backend/):
   python -m eval.eval_retrieval                      # embedding-only baseline
+  python -m eval.eval_retrieval --method hybrid      # also: bm25
   python -m eval.eval_retrieval --method embedding --reindex
   python -m eval.eval_retrieval --source codebase-qa-agent=..   # unpushed commit
 """
@@ -44,11 +45,14 @@ K_VALUES = (1, 3, 5, 8)
 MAX_K = max(K_VALUES)
 
 # --method registry. A retriever takes (indexer, question, n) and returns the
-# top-n chunks, best first, each a dict with at least a "file" key. Hybrid
-# retrieval (task 6) plugs in here as "bm25" and "hybrid".
+# top-n chunks, best first, each a dict with at least a "file" key.
+# "embedding" is RepoIndexer's "vector" method (name kept so old result files
+# still line up).
 Retriever = Callable[[RepoIndexer, str, int], list[dict]]
 RETRIEVERS: dict[str, Retriever] = {
-    "embedding": lambda idx, q, n: idx.query(q, n_results=n),
+    "embedding": lambda idx, q, n: idx.query(q, n_results=n, method="vector"),
+    "bm25": lambda idx, q, n: idx.query(q, n_results=n, method="bm25"),
+    "hybrid": lambda idx, q, n: idx.query(q, n_results=n, method="hybrid"),
 }
 
 
@@ -139,8 +143,11 @@ def main() -> None:
         idx, stats = get_indexer(repo, sources.get(repo), args.reindex)
         index_stats[repo] = stats
         for q in (q for q in QUESTIONS if q.repo == repo):
+            t = time.perf_counter()
             hits = retrieve(idx, q.question, MAX_K)
-            rows.append(score(q, [h["file"] for h in hits]))
+            row = score(q, [h["file"] for h in hits])
+            row["retrieval_ms"] = round((time.perf_counter() - t) * 1000, 1)
+            rows.append(row)
 
     groups = {"all": aggregate(rows)}
     for repo in repos:
@@ -150,6 +157,9 @@ def main() -> None:
 
     print(f"\n## Retrieval eval: method={args.method}\n")
     print(markdown_table(groups))
+    lat = sorted(r["retrieval_ms"] for r in rows)
+    print(f"\nRetrieval latency (in-process, n={len(lat)}): "
+          f"p50 {lat[len(lat) // 2]:.1f} ms · max {lat[-1]:.1f} ms")
     print("\nMisses (no expected file in top 3):")
     for r in rows:
         if r["recall"]["3"] == 0:

@@ -12,6 +12,9 @@ import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 
+from retrieval.bm25_index import BM25Index
+from retrieval.fusion import reciprocal_rank_fusion
+
 logger = logging.getLogger(__name__)
 
 SUPPORTED_EXTENSIONS = {
@@ -39,6 +42,12 @@ CLONE_TIMEOUT_SECONDS = 300
 # long as this directory survives (a Docker volume locally; note that Render's
 # free tier has no persistent disk, so there it lasts until the next deploy).
 CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "./chroma_data")
+
+RETRIEVAL_METHODS = ("vector", "bm25", "hybrid")
+DEFAULT_RETRIEVAL_METHOD = "hybrid"  # what /chat uses
+# Hybrid fuses this many candidates per retriever per result slot (8 -> 24).
+# Deeper lists let a chunk that is mid-ranked by both retrievers rise to the top.
+HYBRID_CANDIDATE_FACTOR = 3
 
 _embed_fn = None
 _chroma_client = None
@@ -92,6 +101,14 @@ def _collection_name(repo_url: str) -> str:
     return "repo_" + hashlib.sha1(repo_url.encode()).hexdigest()[:16]
 
 
+def _bm25_path(collection_name: str) -> str:
+    return os.path.join(CHROMA_PERSIST_DIR, "bm25", f"{collection_name}.json")
+
+
+def _chunk_id(chunk: dict) -> str:
+    return f"{chunk['file']}::{chunk['lines']}"
+
+
 def warm_up() -> None:
     """Load the embedding model and run it once.
 
@@ -116,12 +133,17 @@ def load_persisted_repos() -> list[dict]:
         if not meta.get("ready"):
             logger.info("Deleting incomplete collection %s", col.name)
             client.delete_collection(col.name)
+            try:
+                os.remove(_bm25_path(col.name))
+            except FileNotFoundError:
+                pass
             continue
 
         indexer = RepoIndexer(meta["repo_url"])
         indexer._collection = client.get_collection(
             name=col.name, embedding_function=_get_embed_fn()
         )
+        indexer._load_bm25()
         repos.append({
             "repo_url": meta["repo_url"],
             "indexer": indexer,
@@ -145,6 +167,7 @@ class RepoIndexer:
         self.chunks: list[dict] = []
         self._temp_dir: str | None = None
         self._collection = None
+        self._bm25: BM25Index | None = None
         self._files: frozenset[str] | None = None
 
     def clone_and_chunk(self) -> dict:
@@ -221,13 +244,20 @@ class RepoIndexer:
         for batch_start in range(0, len(self.chunks), UPSERT_BATCH_SIZE):
             batch = self.chunks[batch_start: batch_start + UPSERT_BATCH_SIZE]
             self._collection.upsert(
-                ids=[f"{c['file']}::{c['lines']}" for c in batch],
+                ids=[_chunk_id(c) for c in batch],
                 documents=[c["content"] for c in batch],
                 metadatas=[
                     {"file": c["file"], "lines": c["lines"], "language": c["language"]}
                     for c in batch
                 ],
             )
+
+        # Saved before save_metadata() flips "ready", so a ready collection
+        # always has its keyword index on disk too.
+        self._bm25 = BM25Index.from_documents(
+            [_chunk_id(c) for c in self.chunks], [c["content"] for c in self.chunks]
+        )
+        self._bm25.save(_bm25_path(name))
 
     def save_metadata(self, stats: dict, summary: dict) -> None:
         """Store stats + summary on the collection and mark it complete.
@@ -241,31 +271,91 @@ class RepoIndexer:
             "summary": json.dumps(summary),
         })
 
-    def query(self, question: str, n_results: int = 8) -> list[dict]:
-        if self._collection is None:
+    def query(self, question: str, n_results: int = 8, method: str = DEFAULT_RETRIEVAL_METHOD) -> list[dict]:
+        """Top chunks for a question, best first.
+
+        method: "vector" (embedding similarity), "bm25" (keyword) or "hybrid"
+        (both, merged with Reciprocal Rank Fusion). Every hit has the chunk
+        keys plus "distance" (vector distance, None if the chunk came only
+        from BM25) and, for bm25/hybrid, "score" (BM25 or RRF score).
+        """
+        if method not in RETRIEVAL_METHODS:
+            raise ValueError(f"unknown retrieval method {method!r}; expected one of {RETRIEVAL_METHODS}")
+        if self._collection is None or n_results <= 0:
             return []
 
-        actual_n = min(n_results, self._collection.count())
+        if method == "vector":
+            return self._vector_hits(question, n_results)
+
+        if method == "bm25":
+            ranked = self._bm25.search(question, n_results) if self._bm25 else []
+            return self._hits_by_id([cid for cid, _ in ranked], dict(ranked))
+
+        depth = n_results * HYBRID_CANDIDATE_FACTOR
+        vector = self._vector_hits(question, depth)
+        keyword = self._bm25.search(question, depth) if self._bm25 else []
+        fused = reciprocal_rank_fusion([[_chunk_id(h) for h in vector], [cid for cid, _ in keyword]])
+        top = fused[:n_results]
+
+        known = {_chunk_id(h): h for h in vector}
+        missing = [cid for cid, _ in top if cid not in known]
+        known.update({_chunk_id(h): h for h in self._hits_by_id(missing)})
+        return [{**known[cid], "score": score} for cid, score in top if cid in known]
+
+    def _vector_hits(self, question: str, n: int) -> list[dict]:
+        actual_n = min(n, self._collection.count())
         if actual_n == 0:
             return []
 
-        results = self._collection.query(
-            query_texts=[question],
-            n_results=actual_n,
-        )
-
+        results = self._collection.query(query_texts=[question], n_results=actual_n)
         hits = []
         for i, doc in enumerate(results["documents"][0]):
             meta = results["metadatas"][0][i]
-            distance = results["distances"][0][i]
             hits.append({
                 "content": doc,
                 "file": meta["file"],
                 "lines": meta["lines"],
                 "language": meta["language"],
-                "distance": distance,
+                "distance": results["distances"][0][i],
             })
         return hits
+
+    def _hits_by_id(self, ids: list[str], scores: dict[str, float] | None = None) -> list[dict]:
+        """Fetch chunks by id from ChromaDB (no embedding), in the given order."""
+        if not ids:
+            return []
+        got = self._collection.get(ids=ids, include=["documents", "metadatas"])
+        by_id = {
+            cid: {
+                "content": doc,
+                "file": meta["file"],
+                "lines": meta["lines"],
+                "language": meta["language"],
+                "distance": None,
+            }
+            for cid, doc, meta in zip(got["ids"], got["documents"], got["metadatas"])
+        }
+        hits = [by_id[cid] for cid in ids if cid in by_id]
+        if scores is not None:
+            for h in hits:
+                h["score"] = scores[_chunk_id(h)]
+        return hits
+
+    def _load_bm25(self) -> None:
+        """Restore the keyword index; rebuild it from ChromaDB if the file is missing.
+
+        The rebuild covers repos indexed before BM25 existed. It reads the
+        stored documents, so nothing is re-embedded.
+        """
+        path = _bm25_path(self._collection.name)
+        try:
+            self._bm25 = BM25Index.load(path)
+            return
+        except (FileNotFoundError, ValueError, KeyError) as exc:
+            logger.info("Rebuilding BM25 index for %s (%s)", self.repo_url, type(exc).__name__)
+        got = self._collection.get(include=["documents"])
+        self._bm25 = BM25Index.from_documents(got["ids"], got["documents"])
+        self._bm25.save(path)
 
     def indexed_files(self) -> frozenset[str]:
         """Relative paths of every file that has at least one chunk.
@@ -291,11 +381,17 @@ class RepoIndexer:
     def delete(self) -> None:
         """Remove the clone and this repo's collection."""
         self.remove_clone()
+        name = _collection_name(self.repo_url)
         try:
-            _get_chroma_client().delete_collection(_collection_name(self.repo_url))
+            _get_chroma_client().delete_collection(name)
         except Exception:
             pass
+        try:
+            os.remove(_bm25_path(name))
+        except FileNotFoundError:
+            pass
         self._collection = None
+        self._bm25 = None
         self._files = None
 
     # ------------------------------------------------------------------
