@@ -168,6 +168,6 @@ Deploy: backend on Render (Docker, free plan, `render.yaml`), frontend on Vercel
 - **Embedding is slow** (130 ms per chunk). Ideas, none tried yet: skip fixtures and lockfiles, drop chunk overlap, profile ONNX threads.
 - **Citation checking is mechanical.** It proves a citation points at retrieved code, not that the code supports the claim. The prompt-v2 fix is unmeasured.
 - **Retrieval:** test files and changelogs distract. Next steps: down-weight them at query time, and add a cross-encoder reranker (it doesn't fit in 512 MB, so it needs a bigger instance).
-- **Not an agent loop yet.** This is single-shot RAG: retrieve once, answer once. A ReAct loop that can search again, read a file or follow a call is planned but not built.
+- **Single-shot retrieval.** Each question retrieves once and answers once ("agent" in the name means a helper, not an autonomous loop). A possible next step is a ReAct loop that can search again, read a file or follow a call when the first retrieval isn't enough.
 - **Free-tier limits:** Groq allows about 8k tokens/minute and 200k/day, which caps how many questions and eval runs fit in a day. If both retries fail on a 429, the stream ends without an error event (not fixed).
 - **Eval size:** 24 questions over 2 Python/JS repos. It shows direction, not statistical significance.

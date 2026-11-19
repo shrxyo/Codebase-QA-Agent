@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="RepoSage", lifespan=lifespan)
+app = FastAPI(title="Codebase-QA-Agent", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

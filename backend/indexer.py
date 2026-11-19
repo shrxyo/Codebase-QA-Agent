@@ -72,7 +72,7 @@ def _check_github_repo_size(url: str) -> None:
     owner, repo = match.group(1), match.group(2)
     api_url = f"https://api.github.com/repos/{owner}/{repo}"
     try:
-        req = urllib.request.Request(api_url, headers={"User-Agent": "RepoSage/1.0"})
+        req = urllib.request.Request(api_url, headers={"User-Agent": "Codebase-QA-Agent/1.0"})
         with urllib.request.urlopen(req, timeout=10) as resp:
             data = json.loads(resp.read())
     except Exception:
