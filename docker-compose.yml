@@ -78,6 +78,10 @@ services:
       POSTGRES_USER: codebaseqa
       POSTGRES_PASSWORD: codebaseqa
       POSTGRES_DB: codebaseqa
+    ports:
+      # For a DB GUI (TablePlus etc.) on the host. Localhost only. 5434, not
+      # 5432/5433: a host Postgres and chat-engine-main already hold those.
+      - "127.0.0.1:${PG_HOST_PORT:-5434}:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
