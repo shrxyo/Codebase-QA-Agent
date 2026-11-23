@@ -19,6 +19,14 @@ export default function App() {
     setInitialQuestion(null)
   }
 
+  function handleHome() {
+    setIndexedRepo(null)
+    setIndexStats(null)
+    setRepoSummary(null)
+    setShowSummary(false)
+    setInitialQuestion(null)
+  }
+
   function handleContinue(question) {
     setInitialQuestion(question ?? null)
     setShowSummary(false)
@@ -45,7 +53,7 @@ export default function App() {
   return (
     <div style={styles.root}>
       <div style={styles.main}>{renderMain()}</div>
-      <StatusBar repo={indexedRepo} stats={indexStats} />
+      <StatusBar repo={indexedRepo} stats={indexStats} onHome={indexedRepo ? handleHome : null} />
     </div>
   )
 }

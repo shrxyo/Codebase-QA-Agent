@@ -3,7 +3,7 @@ import { checkHealth } from '../lib/api.js'
 
 const POLL_INTERVAL_MS = 30_000
 
-export default function StatusBar({ repo, stats }) {
+export default function StatusBar({ repo, stats, onHome }) {
   const [health, setHealth] = useState(null) // null = loading, 'ok' | 'error'
   const [chunksVerified, setChunksVerified] = useState(0)
   const timerRef = useRef(null)
@@ -32,8 +32,21 @@ export default function StatusBar({ repo, stats }) {
 
   return (
     <div style={styles.bar}>
-      {/* Left: health status */}
+      {/* Left: home button (once past the landing page) + health status */}
       <span style={styles.healthSection}>
+        {onHome && (
+          <button
+            type="button"
+            style={styles.homeBtn}
+            onClick={onHome}
+            title="Back to the landing page to index another repo"
+            aria-label="Home"
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)'; e.currentTarget.style.borderColor = 'var(--color-accent)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-muted)'; e.currentTarget.style.borderColor = 'var(--color-border)' }}
+          >
+            ⌂ Home
+          </button>
+        )}
         <span
           style={{
             ...styles.dot,
@@ -97,6 +110,22 @@ const styles = {
     gap: '0.4rem',
     flexShrink: 0,
     minWidth: 0,
+  },
+  homeBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    marginRight: '0.5rem',
+    padding: '0.1rem 0.5rem',
+    background: 'transparent',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-sm)',
+    color: 'var(--color-text-muted)',
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.72rem',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    transition: 'color 0.15s ease, border-color 0.15s ease',
   },
   dot: {
     width: 6,
