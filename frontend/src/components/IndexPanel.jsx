@@ -23,11 +23,6 @@ const FEATURE_CARDS = [
     desc: 'Hybrid BM25 + vector retrieval with cross-encoder reranking for precise code search.',
   },
   {
-    icon: '◈',
-    title: 'Agent Layer',
-    desc: 'Tool-calling agent that searches, reads files, and traces reasoning step by step.',
-  },
-  {
     icon: '▷',
     title: 'Streaming',
     desc: 'SSE token streaming with live source citations linked to exact file:line spans.',
@@ -406,7 +401,7 @@ const s = {
   featureGrid: {
     width: '100%',
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: 'repeat(2, 1fr)',
     gap: '0.875rem',
   },
   featureCard: {
