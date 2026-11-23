@@ -120,6 +120,18 @@ services:
       retries: 20
     restart: unless-stopped
 
+  chroma-admin:
+    # Optional web UI for browsing Chroma (unofficial, community project).
+    # Opt-in so the normal stack is unchanged:
+    #   docker compose --profile tools up -d chroma-admin  -> http://localhost:8002
+    # In the UI, connect to http://chroma:8000 (resolved inside the network).
+    image: fengzhichao/chromadb-admin
+    profiles: ["tools"]
+    ports:
+      - "127.0.0.1:${CHROMA_ADMIN_PORT:-8002}:3001"
+    depends_on:
+      - chroma
+
   frontend:
     build:
       context: ./frontend
