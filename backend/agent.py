@@ -205,25 +205,36 @@ def stream_answer(
     client = llm_client.get_llm_client()
     model = llm_client.get_model_name()
 
-    stream = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        max_tokens=MAX_TOKENS,
-        stream=True,
-        **llm_client.get_request_options(),
-    )
-
     ttft_ms = None
     answer_parts = []
-    for chunk in stream:
-        if not chunk.choices:
-            continue
-        delta = chunk.choices[0].delta
-        if delta.content:
-            if ttft_ms is None:
-                ttft_ms = _ms_since(t_start)
-            answer_parts.append(delta.content)
-            yield f"data: {json.dumps({'type': 'text', 'content': delta.content})}\n\n"
+    try:
+        stream = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            max_tokens=MAX_TOKENS,
+            stream=True,
+            **llm_client.get_request_options(),
+        )
+        for chunk in stream:
+            if not chunk.choices:
+                continue
+            delta = chunk.choices[0].delta
+            if delta.content:
+                if ttft_ms is None:
+                    ttft_ms = _ms_since(t_start)
+                answer_parts.append(delta.content)
+                yield f"data: {json.dumps({'type': 'text', 'content': delta.content})}\n\n"
+    except Exception:
+        # Usually the hosted model's rate limit (8k tokens/min, 200k/day on
+        # the free tier) after the SDK's own retries. Without this the stream
+        # just stopped and the UI waited forever; now it ends cleanly.
+        logger.exception("LLM request failed")
+        message = (
+            "The answer was cut off because the language model is unavailable or rate-limited. "
+            if answer_parts else
+            "The language model is unavailable or rate-limited right now. "
+        ) + "Please try again in a minute."
+        yield f"data: {json.dumps({'type': 'warning', 'message': message})}\n\n"
 
     # Verify citations once the whole answer exists (a citation can be split
     # across tokens). A bug here must never cost the user the answer itself.

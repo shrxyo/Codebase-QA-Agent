@@ -1,18 +1,120 @@
+# Production-like local stack: horizontally scalable API behind a load balancer.
+#
+#   browser ─► lb (nginx :8000) ─► api ×3 (stateless FastAPI)
+#                                    │
+#            postgres (repo registry, build status, BM25 tokens)
+#            chroma   (vector server)
+#            redis ─► worker ×1 (Celery: clone, chunk, embed, summary)
+#
+# Scale either tier:  docker compose up -d --scale api=5 --scale worker=2
+#
+# Without DATABASE_URL / REDIS_URL / CHROMA_HOST the same image runs as one
+# self-contained process (SQLite, embedded Chroma, in-process indexing): that
+# is how the Render free-tier deploy runs.
+
+x-backend: &backend
+  build:
+    context: ./backend
+    dockerfile: Dockerfile
+  image: codebase-qa-agent-backend
+  env_file:
+    - ./backend/.env
+  environment: &backend-env
+    DATABASE_URL: postgresql+psycopg://codebaseqa:codebaseqa@postgres:5432/codebaseqa
+    REDIS_URL: redis://redis:6379/0
+    CHROMA_HOST: chroma
+    CHROMA_PORT: "8000"
+    # Overridable from the shell for the scale test (deploy/scale_test.py):
+    # DEBUG_MODE=true enables /debug/retrieval, a short visibility timeout
+    # makes a killed worker's job come back quickly.
+    DEBUG_MODE: ${DEBUG_MODE:-false}
+    CELERY_VISIBILITY_TIMEOUT: ${CELERY_VISIBILITY_TIMEOUT:-900}
+  volumes:
+    # Code from the host (dev convenience, and eval results land in the repo).
+    - ./backend:/app
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    chroma:
+      condition: service_healthy
+
 services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+  lb:
+    image: nginx:1.27-alpine
     ports:
-      - "8000:8000"
-    env_file:
-      - ./backend/.env
-    environment:
-      # Overrides any value in .env so the index lands in the named volume
-      CHROMA_PERSIST_DIR: /data/chroma
+      # API_PORT=8001 docker compose up -d   if 8000 is taken on the host
+      - "${API_PORT:-8000}:80"
     volumes:
-      - ./backend:/app
-      - chroma_data:/data/chroma
+      - ./deploy/nginx.lb.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  api:
+    <<: *backend
+    deploy:
+      replicas: 3
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+
+  worker:
+    <<: *backend
+    # solo pool: one process, one job at a time (indexing peaks at ~370 MiB).
+    # Add capacity with --scale worker=N rather than threads.
+    command: ["celery", "-A", "tasks", "worker", "--pool=solo", "--concurrency=1", "-Q", "index", "--loglevel=INFO"]
+    deploy:
+      replicas: 1
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: codebaseqa
+      POSTGRES_PASSWORD: codebaseqa
+      POSTGRES_DB: codebaseqa
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codebaseqa"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    # appendonly: queued index jobs survive a Redis restart.
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  chroma:
+    # Server version must match the chromadb client in requirements.txt.
+    image: chromadb/chroma:0.5.23
+    environment:
+      IS_PERSISTENT: "TRUE"
+      PERSIST_DIRECTORY: /chroma/chroma
+      ANONYMIZED_TELEMETRY: "FALSE"
+    volumes:
+      - chroma_data:/chroma/chroma
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/heartbeat', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
 
   frontend:
     build:
@@ -20,12 +122,14 @@ services:
       dockerfile: Dockerfile
       args:
         # Baked into the JS bundle and called from the browser on the host,
-        # so it's the host-published backend port, not http://backend:8000.
-        VITE_API_URL: http://localhost:8000
+        # so it's the load balancer's host port, not a service name.
+        VITE_API_URL: http://localhost:${API_PORT:-8000}
     ports:
       - "8080:80"
     depends_on:
-      - backend
+      - lb
 
 volumes:
+  pg_data:
+  redis_data:
   chroma_data:

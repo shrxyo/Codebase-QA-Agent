@@ -1,18 +1,37 @@
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
-export async function indexRepo(repoUrl) {
+const POLL_INTERVAL_MS = 2000
+// Render's free CPU needs ~10 min for a medium repo; give up well after that.
+const POLL_TIMEOUT_MS = 30 * 60 * 1000
+
+async function errorFrom(res) {
+  const body = await res.json().catch(() => ({}))
+  return new Error(body.detail ?? `Server error ${res.status}`)
+}
+
+// POST /index answers 200 with the repo if it's already indexed, or 202 once
+// a background build is queued. In the 202 case, poll /index/status until the
+// build finishes, so callers always get the final indexed payload.
+export async function indexRepo(repoUrl, onStatus) {
   const res = await fetch(`${BASE_URL}/index`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ repo_url: repoUrl }),
   })
+  if (!res.ok) throw await errorFrom(res)
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error(body.detail ?? `Server error ${res.status}`)
+  let data = await res.json()
+  const deadline = Date.now() + POLL_TIMEOUT_MS
+  while (data.status !== 'indexed') {
+    if (data.status === 'failed') throw new Error(data.error ?? 'Indexing failed')
+    if (Date.now() > deadline) throw new Error('Indexing is taking too long. Try again later.')
+    onStatus?.(data.status)
+    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS))
+    const poll = await fetch(`${BASE_URL}/index/status?repo_url=${encodeURIComponent(data.repo_url)}`)
+    if (!poll.ok) throw await errorFrom(poll)
+    data = await poll.json()
   }
-
-  return res.json()
+  return data
 }
 
 export async function checkHealth() {

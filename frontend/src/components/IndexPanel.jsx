@@ -40,6 +40,8 @@ export default function IndexPanel({ onSuccess }) {
   const [error, setError] = useState(null)
   const [msgIndex, setMsgIndex] = useState(0)
   const [msgKey, setMsgKey] = useState(0)
+  // Build status from the server while polling ("queued" = waiting for a worker)
+  const [jobStatus, setJobStatus] = useState(null)
   const intervalRef = useRef(null)
   const fillRef = useRef(null)
 
@@ -68,6 +70,7 @@ export default function IndexPanel({ onSuccess }) {
     if (!trimmed) return
 
     setError(null)
+    setJobStatus(null)
     setLoading(true)
     startMessageCycle()
 
@@ -79,7 +82,7 @@ export default function IndexPanel({ onSuccess }) {
     }
 
     try {
-      const data = await indexRepo(trimmed)
+      const data = await indexRepo(trimmed, setJobStatus)
       clearInterval(intervalRef.current)
       onSuccess({
         repo: data.repo_url,
@@ -168,7 +171,7 @@ export default function IndexPanel({ onSuccess }) {
 
               {/* Status message */}
               <p key={msgKey} className="fade-up" style={s.statusMsg}>
-                {STATUS_MESSAGES[msgIndex]}
+                {jobStatus === 'queued' ? 'Waiting for an indexing worker…' : STATUS_MESSAGES[msgIndex]}
               </p>
             </div>
           )}

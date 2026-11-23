@@ -35,6 +35,9 @@ RESULTS_DIR = os.path.join(EVAL_DIR, "results")
 # indexer reads CHROMA_PERSIST_DIR at import time, and Docker sets it to the
 # app's index, so override it (not setdefault) before importing.
 os.environ["CHROMA_PERSIST_DIR"] = INDEX_DIR
+# In docker compose the app talks to a shared Chroma server; the eval must keep
+# its own embedded store so it never reads or deletes the app's collections.
+os.environ.pop("CHROMA_HOST", None)
 
 import indexer as indexer_module  # noqa: E402
 from indexer import RepoIndexer  # noqa: E402

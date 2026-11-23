@@ -77,15 +77,21 @@ class BM25Index:
         order = sorted(range(len(scores)), key=lambda i: -scores[i])
         return [(self.ids[i], float(scores[i])) for i in order[:n] if scores[i] > 0]
 
+    def to_dict(self) -> dict:
+        return {"version": 1, "ids": self.ids, "tokens": self._tokens}
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "BM25Index":
+        return cls(data["ids"], data["tokens"])
+
     def save(self, path: str) -> None:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         tmp = path + ".tmp"
         with open(tmp, "w") as f:
-            json.dump({"version": 1, "ids": self.ids, "tokens": self._tokens}, f)
+            json.dump(self.to_dict(), f)
         os.replace(tmp, path)  # atomic: a crash never leaves half a file
 
     @classmethod
     def load(cls, path: str) -> "BM25Index":
         with open(path) as f:
-            data = json.load(f)
-        return cls(data["ids"], data["tokens"])
+            return cls.from_dict(json.load(f))

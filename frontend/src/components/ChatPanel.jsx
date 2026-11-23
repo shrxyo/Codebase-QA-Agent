@@ -79,6 +79,16 @@ export default function ChatPanel({ repo, summary, stats, initialQuestion }) {
           }
           return updated
         })
+      } else if (event.type === 'warning') {
+        // e.g. the model was rate-limited; shown in the bubble's error row.
+        setMessages((prev) => {
+          const updated = [...prev]
+          const last = updated[updated.length - 1]
+          if (last?.role === 'assistant') {
+            updated[updated.length - 1] = { ...last, error: event.message }
+          }
+          return updated
+        })
       } else if (event.type === 'done' || event.type === 'error') {
         setMessages((prev) => {
           const updated = [...prev]
@@ -87,7 +97,7 @@ export default function ChatPanel({ repo, summary, stats, initialQuestion }) {
             updated[updated.length - 1] = {
               ...last,
               streaming: false,
-              error: event.type === 'error' ? event.message : null,
+              error: event.type === 'error' ? event.message : (last.error ?? null),
             }
           }
           return updated

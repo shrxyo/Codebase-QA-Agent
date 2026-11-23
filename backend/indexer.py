@@ -9,6 +9,7 @@ import tempfile
 import urllib.request
 
 import chromadb
+import numpy as np
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 
@@ -60,6 +61,10 @@ CLONE_TIMEOUT_SECONDS = 300
 # long as this directory survives (a Docker volume locally; note that Render's
 # free tier has no persistent disk, so there it lasts until the next deploy).
 CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "./chroma_data")
+# Set (docker compose) = talk to a shared ChromaDB server, so every API replica
+# and worker sees the same vectors. Unset = embedded on-disk store (one process).
+CHROMA_HOST = os.getenv("CHROMA_HOST", "").strip()
+CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8000"))
 
 RETRIEVAL_METHODS = ("vector", "bm25", "hybrid")
 DEFAULT_RETRIEVAL_METHOD = "hybrid"  # what /chat uses
@@ -112,15 +117,71 @@ def _get_embed_fn():
     return _embed_fn
 
 
+def embed_query(text: str) -> list[float]:
+    """Embed one question without padding it to 256 tokens.
+
+    Chroma's embedder pads every input to a fixed 256 tokens. That barely
+    matters for chunks (89% are longer than 256 anyway), but a question is
+    ~15 tokens, so 94% of the work was padding: embedding the question was
+    the whole cost of retrieval (p50 ~64 ms of ~58-90 ms in a replica).
+    Padding is masked out of attention and mean pooling, so dropping it gives
+    the same vector (cosine 1.0, max abs diff ~1e-8, measured) at ~1/6 of the
+    compute. Uses Chroma's own tokenizer and ONNX session: no extra memory.
+    """
+    ef = _get_embed_fn()
+    try:
+        enc = ef.tokenizer.encode(text)  # truncated to 256, padded to 256
+        n = max(1, sum(enc.attention_mask))  # padding is always at the end
+        ids = np.array([enc.ids[:n]], dtype=np.int64)
+        mask = np.array([enc.attention_mask[:n]], dtype=np.int64)
+        hidden = ef.model.run(None, {
+            "input_ids": ids, "attention_mask": mask, "token_type_ids": np.zeros_like(ids),
+        })[0]
+    except AttributeError:  # a chromadb upgrade changed the internals
+        return list(ef([text])[0])
+    m = mask[..., None].astype(np.float32)
+    pooled = (hidden * m).sum(axis=1) / np.clip(m.sum(axis=1), 1e-9, None)
+    return (pooled / np.linalg.norm(pooled, axis=1, keepdims=True))[0].tolist()
+
+
 def _get_chroma_client():
     global _chroma_client
     if _chroma_client is None:
-        _chroma_client = chromadb.PersistentClient(
-            path=CHROMA_PERSIST_DIR,
-            # Don't send usage telemetry from a demo server.
-            settings=Settings(anonymized_telemetry=False),
-        )
+        # Don't send usage telemetry from a demo server.
+        settings = Settings(anonymized_telemetry=False)
+        if CHROMA_HOST:
+            # Embeddings are still computed in this process (the collection's
+            # embedding_function runs client-side); the server only stores
+            # vectors and answers nearest-neighbour queries.
+            _chroma_client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT, settings=settings)
+        else:
+            _chroma_client = chromadb.PersistentClient(path=CHROMA_PERSIST_DIR, settings=settings)
     return _chroma_client
+
+
+def build_collection_name(repo_url: str, attempt_id: str) -> str:
+    """A fresh collection for one build attempt (blue/green rebuilds).
+
+    Unique per attempt, so a rebuild never touches the collection that is
+    serving chat, and two duplicate runs of one job never share a collection.
+    """
+    return f"{_collection_name(repo_url)}_{attempt_id[:12]}"
+
+
+def build_collections_for_repo(repo_url: str) -> list[str]:
+    """Every per-build collection of this repo (serving, in progress, orphaned)."""
+    prefix = _collection_name(repo_url) + "_"
+    return [c.name for c in _get_chroma_client().list_collections() if c.name.startswith(prefix)]
+
+
+def delete_collection(name: str) -> None:
+    try:
+        _get_chroma_client().delete_collection(name)
+    except Exception:
+        pass  # already gone
+
+
+_LEGACY_NAME_RE = re.compile(r"repo_[0-9a-f]{16}")
 
 
 def _collection_name(repo_url: str) -> str:
@@ -157,6 +218,11 @@ def load_persisted_repos() -> list[dict]:
     client = _get_chroma_client()
     repos = []
     for col in client.list_collections():
+        # Only the deterministic per-repo collections (eval harness). Per-build
+        # collections (repo_<hash>_<attempt>) belong to the app, which tracks
+        # them in db.py; deleting an "unready" one would kill a live build.
+        if not _LEGACY_NAME_RE.fullmatch(col.name):
+            continue
         meta = col.metadata or {}
         if not meta.get("ready"):
             logger.info("Deleting incomplete collection %s", col.name)
@@ -189,15 +255,38 @@ class RepoIndexer:
         clone() -> chunk() -> build_index() -> save_metadata() -> remove_clone()
     """
 
-    def __init__(self, repo_url: str, function_aware: bool = FUNCTION_AWARE_CHUNKS):
+    def __init__(self, repo_url: str, function_aware: bool = FUNCTION_AWARE_CHUNKS,
+                 collection_name: str | None = None, persist_bm25_file: bool = True):
         self.repo_url = repo_url
         self.function_aware = function_aware
+        # Default: one deterministic collection per repo (the eval harness and
+        # load_persisted_repos() rely on it). The app passes a per-build name.
+        self.collection_name = collection_name or _collection_name(repo_url)
+        # The app keeps BM25 tokens in the shared DB instead (db.Repo.bm25),
+        # because a file on one container's disk is invisible to the others.
+        self.persist_bm25_file = persist_bm25_file
         self.repo_dir: str | None = None
         self.chunks: list[dict] = []
         self._temp_dir: str | None = None
         self._collection = None
         self._bm25: BM25Index | None = None
         self._files: frozenset[str] | None = None
+
+    @classmethod
+    def attach(cls, repo_url: str, collection_name: str, bm25: dict) -> "RepoIndexer":
+        """A query-only indexer for an existing collection (used by /chat)."""
+        idx = cls(repo_url, collection_name=collection_name, persist_bm25_file=False)
+        idx._collection = _get_chroma_client().get_collection(
+            name=collection_name, embedding_function=_get_embed_fn()
+        )
+        idx._bm25 = BM25Index.from_dict(bm25)
+        # Chunk ids are "file::lines", so the file list needs no Chroma scan.
+        idx._files = frozenset(cid.rsplit("::", 1)[0] for cid in idx._bm25.ids)
+        return idx
+
+    def bm25_payload(self) -> dict:
+        """The keyword index as JSON-able data, for db.finish_build()."""
+        return self._bm25.to_dict()
 
     def clone_and_chunk(self) -> dict:
         self.clone()
@@ -211,11 +300,14 @@ class RepoIndexer:
         self.repo_dir = os.path.join(self._temp_dir, "repo")
 
         subprocess.run(
-            ["git", "clone", "--depth=1", self.repo_url, self.repo_dir],
+            ["git", "clone", "--depth=1", "--", self.repo_url, self.repo_dir],
             check=True,
             timeout=CLONE_TIMEOUT_SECONDS,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            # A private or missing repo makes git ask for credentials; with no
+            # terminal that would hang the worker until the 5-minute timeout.
+            env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
         )
 
     def chunk(self) -> dict:
@@ -260,7 +352,7 @@ class RepoIndexer:
     def build_index(self) -> None:
         """Embed all chunks into this repo's collection, replacing any old one."""
         client = _get_chroma_client()
-        name = _collection_name(self.repo_url)
+        name = self.collection_name
         try:
             client.delete_collection(name)
         except Exception:
@@ -290,7 +382,8 @@ class RepoIndexer:
         self._bm25 = BM25Index.from_documents(
             [_chunk_id(c) for c in self.chunks], [c["content"] for c in self.chunks]
         )
-        self._bm25.save(_bm25_path(name))
+        if self.persist_bm25_file:
+            self._bm25.save(_bm25_path(name))
 
     def save_metadata(self, stats: dict, summary: dict) -> None:
         """Store stats + summary on the collection and mark it complete.
@@ -340,7 +433,7 @@ class RepoIndexer:
         if actual_n == 0:
             return []
 
-        results = self._collection.query(query_texts=[question], n_results=actual_n)
+        results = self._collection.query(query_embeddings=[embed_query(question)], n_results=actual_n)
         hits = []
         for i, doc in enumerate(results["documents"][0]):
             meta = results["metadatas"][0][i]
@@ -414,15 +507,13 @@ class RepoIndexer:
     def delete(self) -> None:
         """Remove the clone and this repo's collection."""
         self.remove_clone()
-        name = _collection_name(self.repo_url)
-        try:
-            _get_chroma_client().delete_collection(name)
-        except Exception:
-            pass
-        try:
-            os.remove(_bm25_path(name))
-        except FileNotFoundError:
-            pass
+        name = self.collection_name
+        delete_collection(name)
+        if self.persist_bm25_file:
+            try:
+                os.remove(_bm25_path(name))
+            except FileNotFoundError:
+                pass
         self._collection = None
         self._bm25 = None
         self._files = None
